@@ -1656,16 +1656,10 @@
             const deadline = document.getElementById('set-deadline').value;
             const msg = document.getElementById('settings-saved-msg');
 
-            if (!schoolName || !deadline) { toast('Isi semua kolom pengaturan', 'err'); return; }
+            if (!deadline) { toast('Isi batas jam masuk', 'err'); return; }
 
             try {
-                const updates = [
-                    sb.from('settings').upsert({ key: 'school_name', value: schoolName }),
-                    sb.from('settings').upsert({ key: 'checkin_deadline', value: deadline })
-                ];
-                await Promise.all(updates);
-
-                appSettings.school_name = schoolName;
+                await sb.from('settings').upsert({ key: 'checkin_deadline', value: deadline });
                 appSettings.checkin_deadline = deadline;
 
                 msg.style.display = 'block';
