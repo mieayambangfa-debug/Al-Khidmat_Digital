@@ -1052,27 +1052,46 @@
         </div>
 
         <!-- QR CODE -->
+        <!-- QR CODE -->
         <div id="m-pane-qr" class="tab-pane">
+
+            <!-- Generate QR Baru -->
             <div class="card">
-                <div class="card-head">📷 QR Code Absensi</div>
-                <p style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">
-                    Generate QR Code harian dan pasang di tempat yang terlihat oleh guru.
-                    Guru akan scan QR ini untuk mencatat absensi masuk.
-                </p>
-                <div id="qr-status-msg" style="margin-bottom:14px;"></div>
-                <div class="qr-wrap">
-                    <div class="qr-frame">
-                        <div id="qr-display">
-                            <div style="text-align:center; color:#9ca3af; font-size:13px; padding:20px;">
-                                QR belum digenerate
-                            </div>
-                        </div>
-                    </div>
-                    <div id="qr-info" style="text-align:center; font-size:12px; color:var(--text-muted);"></div>
+                <div class="card-head">✨ Generate QR Code Baru</div>
+                <div class="form-group">
+                    <label class="form-label">Nama / Label QR <span style="color:var(--danger)">*</span></label>
+                    <input type="text" id="inp-qr-label" class="form-input"
+                        placeholder="Contoh: QR Harian, QR Event Wisuda, QR Permanen Sekolah">
                 </div>
-                <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
-                    <button class="btn btn-green" onclick="generateQR()">🔄 Generate QR Baru</button>
-                    <button class="btn btn-gold" onclick="printQR()">🖨️ Cetak QR</button>
+                <div class="form-group">
+                    <label class="form-label">Durasi Berlaku</label>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px;">
+                        <button class="role-btn active" id="dur-1" onclick="pickDur(1,this)">
+                            <span class="role-icon">📅</span>1 Hari
+                        </button>
+                        <button class="role-btn" id="dur-3" onclick="pickDur(3,this)">
+                            <span class="role-icon">📅</span>3 Hari
+                        </button>
+                        <button class="role-btn" id="dur-7" onclick="pickDur(7,this)">
+                            <span class="role-icon">📅</span>7 Hari
+                        </button>
+                        <button class="role-btn" id="dur-0" onclick="pickDur(0,this)">
+                            <span class="role-icon">♾️</span>Selamanya
+                        </button>
+                    </div>
+                </div>
+                <button class="btn btn-green" style="width:100%;padding:12px;margin-top:8px;" onclick="generateQR()">
+                    🔄 Generate &amp; Simpan QR
+                </button>
+            </div>
+
+            <!-- Daftar QR Tersimpan -->
+            <div class="card">
+                <div class="card-head">📂 QR Tersimpan</div>
+                <div id="qr-list-wrap">
+                    <div class="empty">
+                        <div class="empty-ico">📷</div>Memuat...
+                    </div>
                 </div>
             </div>
         </div>
@@ -1578,81 +1597,167 @@
         }
 
         // — QR Code —
-        async function loadQR() {
-            const d = today();
-            const msg = document.getElementById('qr-status-msg');
-            const inf = document.getElementById('qr-info');
-            const dp = document.getElementById('qr-display');
 
-            try {
-                const { data } = await sb.from('qr_tokens').select('*')
-                    .eq('valid_date', d).eq('is_active', true).single();
+        // ══ QR CODE (versi baru: multi-durasi + label) ══
 
-                if (data) {
-                    msg.innerHTML = `<div style="background:#dcfce7;border:1px solid #86efac;border-radius:8px;padding:10px 14px;font-size:13px;color:#15803d;">
-        ✅ QR aktif untuk hari ini (${d})</div>`;
-                    renderQR(data.token, dp);
-                    inf.innerHTML = `<div style="font-family:monospace;background:#f3f4f6;padding:3px 8px;border-radius:4px;font-size:12px;">${data.token}</div>
-        <div style="margin-top:4px;font-size:11px;">Berlaku: ${d}</div>`;
-                } else {
-                    msg.innerHTML = `<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px 14px;font-size:13px;color:#92400e;">
-        ⚠️ Belum ada QR hari ini. Klik "Generate QR Baru".</div>`;
-                    dp.innerHTML = `<div style="text-align:center;color:#9ca3af;font-size:13px;padding:20px;">QR belum digenerate</div>`;
-                    inf.innerHTML = '';
-                }
-            } catch (e) { console.error(e); }
+        let qrDuration = 1; // hari; 0 = selamanya
+
+        function pickDur(days, btn) {
+            qrDuration = days;
+            document.querySelectorAll('[id^="dur-"]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
         }
 
-        function renderQR(token, container) {
-            container.innerHTML = '';
-            const payload = JSON.stringify({ app: 'al-khidmat-digital', date: today(), token });
-            new QRCode(container, {
-                text: payload,
-                width: 220, height: 220,
-                colorDark: '#0b3320', colorLight: '#ffffff',
-                correctLevel: QRCode.CorrectLevel.H
-            });
+        async function loadQR() {
+            const wrap = document.getElementById('qr-list-wrap');
+            wrap.innerHTML = loaderHTML;
+            try {
+                const { data, error } = await sb.from('qr_tokens')
+                    .select('*').eq('is_active', true)
+                    .order('created_at', { ascending: false });
+                if (error) throw error;
+                if (!data || !data.length) {
+                    wrap.innerHTML = '<div class="empty"><div class="empty-ico">📷</div>Belum ada QR tersimpan. Generate QR baru di atas.</div>';
+                    return;
+                }
+                const td = today();
+                wrap.innerHTML = data.map(q => {
+                    const expired = q.valid_until && q.valid_until < td;
+                    const durLabel = !q.valid_until
+                        ? '♾️ Selamanya'
+                        : q.valid_until === q.valid_date
+                            ? '📅 1 Hari'
+                            : `📅 s/d ${q.valid_until}`;
+                    return `
+                    <div style="border:1px solid ${expired ? '#fecaca' : '#d1fae5'};border-radius:10px;
+                                padding:14px;margin-bottom:10px;background:${expired ? '#fff7f7' : '#f9fffe'};">
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+                            <div>
+                                <div style="font-weight:700;font-size:15px;">${q.label || 'QR Tanpa Nama'}</div>
+                                <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">
+                                    Dibuat: ${q.valid_date} &nbsp;·&nbsp; ${durLabel}
+                                </div>
+                                <div style="font-size:11.5px;color:${expired ? 'var(--danger)' : 'var(--success)'};margin-top:2px;font-weight:600;">
+                                    ${expired ? '⛔ Kadaluarsa' : '✅ Aktif'}
+                                </div>
+                            </div>
+                            <span class="badge ${expired ? 'b-red' : 'b-green'}">${expired ? 'Expired' : 'Aktif'}</span>
+                        </div>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                            <button class="btn btn-sm" style="background:#e0f2fe;color:#0369a1;"
+                                onclick="toggleQRPreview('${q.id}','${q.token}','${q.valid_date}')">
+                                👁️ Lihat QR
+                            </button>
+                            <button class="btn btn-sm btn-gold"
+                                onclick="printQRItem('${q.token}','${q.valid_date}','${q.valid_until || ''}','${(q.label || 'QR Absensi').replace(/'/g, '')}')">
+                                🖨️ Cetak
+                            </button>
+                            <button class="btn btn-sm btn-red"
+                                onclick="deleteQR('${q.id}','${(q.label || 'ini').replace(/'/g, '')}')">
+                                🗑️ Hapus
+                            </button>
+                        </div>
+                        <div id="qr-prev-${q.id}" style="display:none;margin-top:12px;text-align:center;
+                            background:white;border-radius:8px;padding:12px;"></div>
+                    </div>`;
+                }).join('');
+            } catch (e) {
+                wrap.innerHTML = `<div style="color:red;padding:12px;">Error: ${e.message}</div>`;
+            }
+        }
+
+        function toggleQRPreview(id, token, validDate) {
+            const el = document.getElementById('qr-prev-' + id);
+            if (el.style.display === 'none') {
+                el.style.display = 'block';
+                if (!el.querySelector('canvas') && !el.querySelector('img')) {
+                    const payload = JSON.stringify({ app: 'al-khidmat-digital', date: validDate, token });
+                    new QRCode(el, {
+                        text: payload, width: 180, height: 180,
+                        colorDark: '#0b3320', colorLight: '#ffffff',
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+                }
+            } else {
+                el.style.display = 'none';
+            }
         }
 
         async function generateQR() {
+            const label = document.getElementById('inp-qr-label').value.trim();
+            if (!label) { toast('Nama QR tidak boleh kosong', 'err'); return; }
+
+            const td = today();
+            let validUntil = null;
+            if (qrDuration > 0) {
+                const d = new Date(td + 'T00:00:00');
+                d.setDate(d.getDate() + qrDuration - 1);
+                validUntil = d.toISOString().split('T')[0];
+            }
+
+            const token = 'AKD-' + Date.now().toString(36).toUpperCase()
+                + '-' + Math.random().toString(36).substr(2, 6).toUpperCase();
             try {
-                await sb.from('qr_tokens').update({ is_active: false }).eq('valid_date', today());
-
-                const token = 'AKD-' + Date.now().toString(36).toUpperCase() +
-                    '-' + Math.random().toString(36).substr(2, 6).toUpperCase();
-
                 const { error } = await sb.from('qr_tokens').insert([{
-                    token, valid_date: today(), is_active: true
+                    token, valid_date: td, valid_until: validUntil, label, is_active: true
                 }]);
                 if (error) throw error;
-
-                toast('QR baru berhasil dibuat!', 'ok');
+                toast('✅ QR "' + label + '" berhasil disimpan!', 'ok');
+                document.getElementById('inp-qr-label').value = '';
                 await Promise.all([loadQR(), loadDashStats()]);
             } catch (e) { toast('Gagal: ' + e.message, 'err'); }
         }
 
-        function printQR() {
-            const canvas = document.querySelector('#qr-display canvas');
-            if (!canvas) { toast('Generate QR terlebih dahulu', 'err'); return; }
+        async function deleteQR(id, label) {
+            if (!confirm(`Hapus QR "${label}"?`)) return;
+            try {
+                const { error } = await sb.from('qr_tokens').update({ is_active: false }).eq('id', id);
+                if (error) throw error;
+                toast('QR dihapus', 'ok');
+                await loadQR();
+            } catch (e) { toast(e.message, 'err'); }
+        }
 
-            const tgl = new Date().toLocaleDateString('id-ID',
-                { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-
-            const win = window.open('', '_blank');
-            win.document.write(`<!DOCTYPE html><html><head><title>QR Absen Al-Khidmat</title>
-    <style>
-      body{font-family:Arial,sans-serif;text-align:center;padding:50px;background:#fff;}
-      h1{color:#0b3320;font-size:22px;} h2{color:#1a5c38;font-size:15px;margin-top:4px;}
-      .frame{display:inline-block;border:5px solid #1a5c38;border-radius:16px;padding:20px;margin:24px 0;}
-      p{color:#374151;font-size:14px;}
-    </style></head><body>
-    <h1>🕌 Al-Khidmat Digital</h1>
-    <h2>Sistem Manajemen Rumah Qur'an Digital</h2>
-    <div class="frame"><img src="${canvas.toDataURL()}" width="240"></div>
-    <p>📅 ${tgl}</p>
-    <p><strong>Scan QR ini untuk absensi masuk</strong></p>
-    <script>setTimeout(()=>window.print(),600);<\/script>
-    </body></html>`);
+        function printQRItem(token, validDate, validUntil, label) {
+            const tmp = document.createElement('div');
+            tmp.style.cssText = 'position:absolute;left:-9999px;';
+            document.body.appendChild(tmp);
+            const payload = JSON.stringify({ app: 'al-khidmat-digital', date: validDate, token });
+            new QRCode(tmp, {
+                text: payload, width: 240, height: 240,
+                colorDark: '#0b3320', colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+            setTimeout(() => {
+                const canvas = tmp.querySelector('canvas');
+                if (!canvas) { document.body.removeChild(tmp); toast('Gagal render QR', 'err'); return; }
+                const durStr = !validUntil
+                    ? '♾️ Berlaku Selamanya'
+                    : validUntil === validDate
+                        ? `📅 Berlaku: ${validDate}`
+                        : `📅 Berlaku: ${validDate} s/d ${validUntil}`;
+                const win = window.open('', '_blank');
+                win.document.write(`<!DOCTYPE html><html><head><title>QR – ${label}</title>
+                <style>
+                  body{font-family:Arial,sans-serif;text-align:center;padding:50px;background:#fff;}
+                  h1{color:#0b3320;font-size:22px;margin-bottom:4px;}
+                  h2{color:#1a5c38;font-size:15px;margin:0;}
+                  .lbl{font-size:20px;font-weight:bold;color:#0b3320;margin:14px 0 4px;}
+                  .frame{display:inline-block;border:5px solid #1a5c38;border-radius:16px;padding:20px;margin:18px 0;}
+                  .dur{background:#dcfce7;border:1px solid #86efac;border-radius:8px;
+                       padding:8px 18px;display:inline-block;font-size:13px;color:#15803d;margin-bottom:12px;}
+                  p{color:#374151;font-size:14px;}
+                </style></head><body>
+                <h1>🕌 Al-Khidmat Digital</h1>
+                <h2>Sistem Manajemen Rumah Qur'an Digital</h2>
+                <div class="lbl">${label}</div>
+                <div class="frame"><img src="${canvas.toDataURL()}" width="240"></div><br>
+                <div class="dur">${durStr}</div>
+                <p><strong>Scan QR ini untuk absensi masuk</strong></p>
+                <script>setTimeout(()=>window.print(),600);<\/script>
+                </body></html>`);
+                document.body.removeChild(tmp);
+            }, 350);
         }
 
         // — Report (ANIMATED) —
@@ -1795,9 +1900,10 @@
 
                 // Validate token
                 const { data: qr, error: qErr } = await sb.from('qr_tokens').select('*')
-                    .eq('token', parsed.token).eq('valid_date', today()).eq('is_active', true).single();
-                if (qErr || !qr) throw new Error('Token QR tidak valid atau sudah kadaluarsa');
-
+                    .eq('token', parsed.token).eq('is_active', true).single();
+                if (qErr || !qr) throw new Error('Token QR tidak valid');
+                if (qr.valid_until && qr.valid_until < today())
+                    throw new Error('QR Code sudah kadaluarsa');
                 // Already attended?
                 const { data: ex } = await sb.from('attendance').select('*')
                     .eq('teacher_id', me.teacher_id).eq('date', today()).single();
