@@ -1099,12 +1099,17 @@
         <!-- LAPORAN -->
         <div id="m-pane-laporan" class="tab-pane">
             <div class="card">
-                <div class="card-head">📋 Laporan Kehadiran</div>
-                <div style="display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
-                    <input type="date" id="filter-tgl" class="form-input" style="flex:1; min-width:140px;"
+                <div
+                    style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+                    <div class="card-head" style="margin:0;">📋 Laporan Kehadiran</div>
+                    <button class="btn btn-gold" onclick="openManualAbsence()">➕ Input Izin / Sakit</button>
+                </div>
+                <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+                    <input type="date" id="filter-tgl" class="form-input" style="flex:1;min-width:140px;"
                         onchange="loadReport()">
                     <button class="btn btn-green" onclick="loadReport()">Tampilkan</button>
                 </div>
+                <div id="report-summary" style="display:none;flex-wrap:wrap;gap:8px;margin-bottom:14px;"></div>
                 <div id="report-wrap">
                     <div class="empty">
                         <div class="empty-ico">📅</div>Pilih tanggal untuk melihat laporan
@@ -1151,6 +1156,17 @@
 
         <!-- SCAN TAB -->
         <div id="g-pane-scan" class="tab-pane active">
+
+            <!-- Warning izin/sakit -->
+            <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;
+                        padding:12px 14px;margin-bottom:14px;display:flex;gap:10px;align-items:flex-start;">
+                <span style="font-size:20px;line-height:1.2;">⚠️</span>
+                <div style="font-size:13px;color:#92400e;">
+                    <strong>Sakit atau Izin hari ini?</strong><br>
+                    Segera lapor ke pihak manajemen agar kehadiran Anda tidak tercatat sebagai <strong>Alpha</strong>.
+                    Guru yang tidak hadir tanpa keterangan akan otomatis tercatat alpha di laporan.
+                </div>
+            </div>
 
             <div id="today-status-card" class="today-card belum">
                 <div class="tc-ico">⏳</div>
@@ -1289,7 +1305,48 @@
         </div>
     </div>
 
+    <!-- ═══════════════════════════════════════════════
+     MODAL: Input Manual Izin / Sakit
+═══════════════════════════════════════════════ -->
+    <div class="overlay" id="modal-manual-absen">
+        <div class="modal">
+            <div class="modal-title">📝 Input Manual Izin / Sakit</div>
 
+            <div class="form-group">
+                <label class="form-label">Tanggal</label>
+                <input type="date" id="inp-ma-tgl" class="form-input">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Guru <span style="color:var(--danger)">*</span></label>
+                <select id="inp-ma-guru" class="form-input">
+                    <option value="">-- Pilih Guru --</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Status <span style="color:var(--danger)">*</span></label>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
+                    <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:2px solid #e5e7eb;
+                                  border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;">
+                        <input type="radio" name="ma-status" value="izin" checked
+                            style="accent-color:var(--green-dark);">
+                        📝 Izin
+                    </label>
+                    <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:2px solid #e5e7eb;
+                                  border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;">
+                        <input type="radio" name="ma-status" value="sakit" style="accent-color:var(--green-dark);">
+                        🤒 Sakit
+                    </label>
+                </div>
+            </div>
+
+            <div style="display:flex;gap:10px;margin-top:18px;">
+                <button class="btn btn-green" onclick="saveManualAbsence()" style="flex:1;">💾 Simpan</button>
+                <button class="btn btn-ghost" onclick="closeModal('modal-manual-absen')" style="flex:1;">Batal</button>
+            </div>
+        </div>
+    </div>
     <!-- TOAST -->
     <div class="toast" id="toast"></div>
 
@@ -1761,44 +1818,168 @@
         }
 
         // — Report (ANIMATED) —
+        // ══ LAPORAN (versi baru: semua guru + alpha detection) ══
+
         async function loadReport() {
             const d = document.getElementById('filter-tgl').value;
             const wrap = document.getElementById('report-wrap');
+            const summary = document.getElementById('report-summary');
             if (!d) return;
 
-            wrap.innerHTML = loaderHTML; // Tampilkan loading
+            wrap.innerHTML = loaderHTML;
+            summary.style.display = 'none';
 
             try {
-                const { data, error } = await sb.from('attendance')
-                    .select('*, teachers(name, subject)')
-                    .eq('date', d)
-                    .order('check_in', { ascending: true });
+                // Ambil semua guru aktif + semua absensi di tanggal ini secara paralel
+                const [{ data: teachers, error: tErr }, { data: att, error: aErr }] = await Promise.all([
+                    sb.from('teachers').select('teacher_id,name,subject').eq('is_active', true).order('name'),
+                    sb.from('attendance').select('*').eq('date', d)
+                ]);
+                if (tErr) throw tErr;
+                if (aErr) throw aErr;
 
-                if (error) throw error;
-                if (!data || !data.length) {
-                    wrap.innerHTML = `<div class="empty"><div class="empty-ico">📅</div>Tidak ada kehadiran pada ${d}</div>`;
+                if (!teachers || !teachers.length) {
+                    wrap.innerHTML = `<div class="empty"><div class="empty-ico">👥</div>Belum ada guru terdaftar</div>`;
                     return;
                 }
+
+                // Map attendance by teacher_id
+                const attMap = {};
+                (att || []).forEach(a => { attMap[a.teacher_id] = a; });
+
+                // Gabungkan: tiap guru dapat statusnya
+                const rows = teachers.map(t => {
+                    const a = attMap[t.teacher_id];
+                    return {
+                        teacher_id: t.teacher_id,
+                        name: t.name,
+                        subject: t.subject,
+                        status: a ? (a.status || 'hadir') : 'alpha',
+                        check_in: a ? a.check_in : null
+                    };
+                });
+
+                // Hitung ringkasan
+                const counts = { hadir: 0, terlambat: 0, izin: 0, sakit: 0, alpha: 0 };
+                rows.forEach(r => {
+                    if (counts[r.status] !== undefined) counts[r.status]++;
+                    else counts.hadir++;
+                });
+
+                // Tampilkan ringkasan
+                const summaryItems = [
+                    { lbl: '✅ Hadir', val: counts.hadir, bg: '#dcfce7', col: '#15803d' },
+                    { lbl: '⏰ Terlambat', val: counts.terlambat, bg: '#fef9c3', col: '#854d0e' },
+                    { lbl: '📝 Izin', val: counts.izin, bg: '#dbeafe', col: '#1d4ed8' },
+                    { lbl: '🤒 Sakit', val: counts.sakit, bg: '#fef3c7', col: '#b45309' },
+                    { lbl: '❌ Alpha', val: counts.alpha, bg: '#fee2e2', col: '#b91c1c' },
+                ];
+                summary.style.display = 'flex';
+                summary.innerHTML = summaryItems.map(s => `
+                    <div style="background:${s.bg};border-radius:8px;padding:9px 14px;
+                                text-align:center;flex:1;min-width:80px;">
+                        <div style="font-size:20px;font-weight:900;color:${s.col};">${s.val}</div>
+                        <div style="font-size:10.5px;color:${s.col};font-weight:700;margin-top:2px;">${s.lbl}</div>
+                    </div>`).join('');
+
+                // Badge map
+                const badgeMap = {
+                    hadir: '<span class="badge b-green">✓ Hadir</span>',
+                    terlambat: '<span class="badge b-yellow">⏰ Terlambat</span>',
+                    izin: '<span class="badge b-blue">📝 Izin</span>',
+                    sakit: '<span class="badge" style="background:#fef9c3;color:#92400e;">🤒 Sakit</span>',
+                    alpha: '<span class="badge b-red">❌ Alpha</span>',
+                };
+
                 wrap.innerHTML = `
-      <div style="margin-bottom:8px;font-size:13px;color:var(--text-muted);">
-        Total kehadiran: <strong>${data.length}</strong>
-      </div>
-      <div class="tbl-wrap">
-        <table>
-          <thead><tr><th>ID</th><th>Nama Guru</th><th>Bidang</th><th>Jam Masuk</th><th>Status</th></tr></thead>
-          <tbody>
-            ${data.map(a => `
-              <tr>
-                <td><code style="background:#f3f4f6;padding:2px 6px;border-radius:4px;font-size:12px;">${a.teacher_id}</code></td>
-                <td><strong>${a.teachers?.name || a.teacher_id}</strong></td>
-                <td>${a.teachers?.subject || '–'}</td>
-                <td>${fmtTime(a.check_in)}</td>
-                <td><span class="badge b-green">✓ Hadir</span></td>
-              </tr>`).join('')}
-          </tbody>
-        </table>
-      </div>`;
-            } catch (e) { wrap.innerHTML = `<div style="color:red;padding:12px;">Error: ${e.message}</div>`; }
+                <div class="tbl-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th><th>Nama Guru</th><th>Bidang</th>
+                                <th>Jam Masuk</th><th>Status</th><th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rows.map(r => `
+                            <tr>
+                                <td><code style="background:#f3f4f6;padding:2px 6px;border-radius:4px;font-size:12px;">
+                                    ${r.teacher_id}</code></td>
+                                <td><strong>${r.name}</strong></td>
+                                <td>${r.subject || '–'}</td>
+                                <td>${r.check_in ? fmtTime(r.check_in) : '<span style="color:#9ca3af;">–</span>'}</td>
+                                <td>${badgeMap[r.status] || badgeMap.hadir}</td>
+                                <td>
+                                    ${r.status !== 'hadir' && r.status !== 'terlambat'
+                        ? `<button class="btn btn-sm btn-gold"
+                                            onclick="openManualAbsence('${r.teacher_id}','${d}')">✏️ Edit</button>`
+                        : '<span style="color:#9ca3af;font-size:12px;">–</span>'}
+                                </td>
+                            </tr>`).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+
+            } catch (e) {
+                wrap.innerHTML = `<div style="color:red;padding:12px;">Error: ${e.message}</div>`;
+            }
+        }
+
+        async function openManualAbsence(preTeacherId = '', preDate = '') {
+            // Isi dropdown guru
+            const sel = document.getElementById('inp-ma-guru');
+            sel.innerHTML = '<option value="">-- Pilih Guru --</option>';
+            try {
+                const { data } = await sb.from('teachers')
+                    .select('teacher_id,name').eq('is_active', true).order('name');
+                (data || []).forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t.teacher_id;
+                    opt.textContent = `${t.teacher_id} – ${t.name}`;
+                    if (t.teacher_id === preTeacherId) opt.selected = true;
+                    sel.appendChild(opt);
+                });
+            } catch (e) { console.error(e); }
+
+            // Set tanggal: dari parameter, atau dari filter laporan, atau hari ini
+            document.getElementById('inp-ma-tgl').value =
+                preDate || document.getElementById('filter-tgl').value || today();
+
+            openModal('modal-manual-absen');
+        }
+
+        async function saveManualAbsence() {
+            const tgl = document.getElementById('inp-ma-tgl').value;
+            const gid = document.getElementById('inp-ma-guru').value;
+            const status = document.querySelector('input[name="ma-status"]:checked')?.value || 'izin';
+
+            if (!tgl || !gid) { toast('Pilih tanggal dan guru', 'err'); return; }
+
+            try {
+                // Cek apakah sudah ada record hari itu
+                const { data: ex } = await sb.from('attendance').select('id')
+                    .eq('teacher_id', gid).eq('date', tgl).maybeSingle();
+
+                if (ex) {
+                    // Update status saja
+                    const { error } = await sb.from('attendance')
+                        .update({ status }).eq('teacher_id', gid).eq('date', tgl);
+                    if (error) throw error;
+                } else {
+                    // Buat record baru: jam masuk default 07:00
+                    const { error } = await sb.from('attendance').insert([{
+                        teacher_id: gid,
+                        date: tgl,
+                        status,
+                        check_in: new Date(tgl + 'T07:00:00+07:00').toISOString()
+                    }]);
+                    if (error) throw error;
+                }
+
+                toast(`✅ Status ${status} untuk ${gid} berhasil disimpan`, 'ok');
+                closeModal('modal-manual-absen');
+                await loadReport(); // Refresh laporan
+            } catch (e) { toast('Gagal: ' + e.message, 'err'); }
         }
 
         // ══════════════════════════════════════════════
