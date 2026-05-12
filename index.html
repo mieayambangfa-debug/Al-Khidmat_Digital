@@ -1,1014 +1,1489 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Al-Khidmat Digital – Absensi Guru</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Al-Khidmat Digital – Absensi Guru</title>
 
-  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Tajawal:wght@300;400;500;700;900&display=swap"
+        rel="stylesheet">
 
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <!-- QR Generator -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <!-- QR Scanner -->
-  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <!-- QR Generator -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- QR Scanner -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 
-  <style>
-    :root {
-      --green-darkest: #0b3320;
-      --green-dark:    #1a5c38;
-      --green-mid:     #206e43;
-      --green-light:   #2e8a56;
-      --gold:          #c9a227;
-      --gold-light:    #e8c547;
-      --cream:         #fdf8f0;
-      --white:         #ffffff;
-      --text-dark:     #1a1a1a;
-      --text-mid:      #374151;
-      --text-muted:    #6b7280;
-      --danger:        #dc2626;
-      --success:       #16a34a;
-      --info:          #2563eb;
-      --shadow:        0 4px 20px rgba(0,0,0,.12);
-      --shadow-lg:     0 8px 48px rgba(0,0,0,.2);
-      --r:             16px;
-      --r-sm:          8px;
-    }
+    <style>
+        :root {
+            --green-darkest: #0b3320;
+            --green-dark: #1a5c38;
+            --green-mid: #206e43;
+            --green-light: #2e8a56;
+            --gold: #c9a227;
+            --gold-light: #e8c547;
+            --cream: #fdf8f0;
+            --white: #ffffff;
+            --text-dark: #1a1a1a;
+            --text-mid: #374151;
+            --text-muted: #6b7280;
+            --danger: #dc2626;
+            --success: #16a34a;
+            --info: #2563eb;
+            --shadow: 0 4px 20px rgba(0, 0, 0, .12);
+            --shadow-lg: 0 8px 48px rgba(0, 0, 0, .2);
+            --r: 16px;
+            --r-sm: 8px;
+        }
 
-    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    body {
-      font-family: 'Tajawal', sans-serif;
-      background: var(--green-darkest);
-      min-height: 100vh;
-      color: var(--text-dark);
-      -webkit-tap-highlight-color: transparent;
-    }
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--green-darkest);
+            min-height: 100vh;
+            color: var(--text-dark);
+            -webkit-tap-highlight-color: transparent;
+        }
 
-    /* ── PAGES ── */
-    .page { display:none; min-height:100vh; }
-    .page.active { display:block; }
-    #page-login.active { display:flex; }
+        /* ── PAGES ── */
+        .page {
+            display: none;
+            min-height: 100vh;
+        }
 
-    /* ═══════════════════════════════════════
+        .page.active {
+            display: block;
+        }
+
+        #page-login.active {
+            display: flex;
+        }
+
+        /* ═══════════════════════════════════════
        LOGIN
     ═══════════════════════════════════════ */
-    #page-login {
-      align-items:center;
-      justify-content:center;
-      padding:24px;
-      background: linear-gradient(160deg, #0b3320 0%, #1a5c38 55%, #0b3320 100%);
-      position:relative;
-      overflow:hidden;
-    }
+        #page-login {
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: linear-gradient(160deg, #0b3320 0%, #1a5c38 55%, #0b3320 100%);
+            position: relative;
+            overflow: hidden;
+        }
 
-    /* subtle geometric tile */
-    #page-login::before {
-      content:'';
-      position:absolute;
-      inset:0;
-      background-image:
-        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cpolygon points='40,2 78,40 40,78 2,40' fill='none' stroke='rgba(201,162,39,.07)' stroke-width='1.5'/%3E%3Cpolygon points='40,14 66,40 40,66 14,40' fill='none' stroke='rgba(201,162,39,.05)' stroke-width='1'/%3E%3C/svg%3E");
-      pointer-events:none;
-    }
+        /* subtle geometric tile */
+        #page-login::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cpolygon points='40,2 78,40 40,78 2,40' fill='none' stroke='rgba(201,162,39,.07)' stroke-width='1.5'/%3E%3Cpolygon points='40,14 66,40 40,66 14,40' fill='none' stroke='rgba(201,162,39,.05)' stroke-width='1'/%3E%3C/svg%3E");
+            pointer-events: none;
+        }
 
-    /* gold shimmer corners */
-    #page-login::after {
-      content:'';
-      position:absolute;
-      top:-120px; right:-120px;
-      width:340px; height:340px;
-      background: radial-gradient(circle, rgba(201,162,39,.18) 0%, transparent 70%);
-      pointer-events:none;
-    }
+        /* gold shimmer corners */
+        #page-login::after {
+            content: '';
+            position: absolute;
+            top: -120px;
+            right: -120px;
+            width: 340px;
+            height: 340px;
+            background: radial-gradient(circle, rgba(201, 162, 39, .18) 0%, transparent 70%);
+            pointer-events: none;
+        }
 
-    .login-card {
-      background: var(--white);
-      border-radius:24px;
-      padding:44px 38px;
-      max-width:420px;
-      width:100%;
-      box-shadow: var(--shadow-lg), 0 0 0 1.5px rgba(201,162,39,.25);
-      position:relative;
-      z-index:1;
-    }
+        .login-card {
+            background: var(--white);
+            border-radius: 24px;
+            padding: 44px 38px;
+            max-width: 420px;
+            width: 100%;
+            box-shadow: var(--shadow-lg), 0 0 0 1.5px rgba(201, 162, 39, .25);
+            position: relative;
+            z-index: 1;
+        }
 
-    .login-header { text-align:center; margin-bottom:28px; }
+        .login-header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
 
-    .login-logo {
-      width:84px; height:84px;
-      border-radius:20px;
-      margin:0 auto 14px;
-      display:block;
-      object-fit:contain;
-      border:3px solid var(--gold);
-      padding:4px;
-      background:var(--green-darkest);
-    }
+        .login-logo {
+            width: 84px;
+            height: 84px;
+            border-radius: 20px;
+            margin: 0 auto 14px;
+            display: block;
+            object-fit: contain;
+            border: 3px solid var(--gold);
+            padding: 4px;
+            background: var(--green-darkest);
+        }
 
-    .bismillah-text {
-      font-family:'Amiri',serif;
-      font-size:20px;
-      color:var(--green-dark);
-      direction:rtl;
-      line-height:1.6;
-      margin-bottom:6px;
-    }
+        .bismillah-text {
+            font-family: 'Amiri', serif;
+            font-size: 20px;
+            color: var(--green-dark);
+            direction: rtl;
+            line-height: 1.6;
+            margin-bottom: 6px;
+        }
 
-    .app-name {
-      font-size:22px;
-      font-weight:900;
-      color:var(--green-darkest);
-      letter-spacing:-.5px;
-    }
+        .app-name {
+            font-size: 22px;
+            font-weight: 900;
+            color: var(--green-darkest);
+            letter-spacing: -.5px;
+        }
 
-    .app-subtitle {
-      font-size:11.5px;
-      color:var(--text-muted);
-      margin-top:3px;
-    }
+        .app-subtitle {
+            font-size: 11.5px;
+            color: var(--text-muted);
+            margin-top: 3px;
+        }
 
-    .gold-line {
-      height:2px;
-      background:linear-gradient(90deg, transparent, var(--gold), transparent);
-      margin:20px 0;
-    }
+        .gold-line {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            margin: 20px 0;
+        }
 
-    /* Role selector */
-    .role-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:22px; }
+        /* Role selector */
+        .role-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 22px;
+        }
 
-    .role-btn {
-      padding:12px 8px;
-      border:2px solid #e5e7eb;
-      border-radius:var(--r-sm);
-      background:transparent;
-      cursor:pointer;
-      transition:all .2s;
-      font-family:'Tajawal',sans-serif;
-      font-size:13px;
-      font-weight:600;
-      color:var(--text-muted);
-      text-align:center;
-    }
+        .role-btn {
+            padding: 12px 8px;
+            border: 2px solid #e5e7eb;
+            border-radius: var(--r-sm);
+            background: transparent;
+            cursor: pointer;
+            transition: all .2s;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-align: center;
+        }
 
-    .role-btn.active {
-      border-color:var(--green-dark);
-      background:rgba(26,92,56,.08);
-      color:var(--green-dark);
-    }
+        .role-btn.active {
+            border-color: var(--green-dark);
+            background: rgba(26, 92, 56, .08);
+            color: var(--green-dark);
+        }
 
-    .role-icon { font-size:26px; display:block; margin-bottom:4px; }
+        .role-icon {
+            font-size: 26px;
+            display: block;
+            margin-bottom: 4px;
+        }
 
-    /* Form */
-    .form-group { margin-bottom:14px; }
-    .form-label { display:block; font-size:13px; font-weight:700; color:var(--text-mid); margin-bottom:6px; }
+        /* Form */
+        .form-group {
+            margin-bottom: 14px;
+        }
 
-    .form-input {
-      width:100%; padding:11px 14px;
-      border:2px solid #e5e7eb;
-      border-radius:var(--r-sm);
-      font-family:'Tajawal',sans-serif;
-      font-size:15px;
-      transition:border-color .2s;
-      outline:none;
-      background:var(--cream);
-      color:var(--text-dark);
-    }
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-mid);
+            margin-bottom: 6px;
+        }
 
-    .form-input:focus { border-color:var(--green-dark); }
+        .form-input {
+            width: 100%;
+            padding: 11px 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: var(--r-sm);
+            font-family: 'Tajawal', sans-serif;
+            font-size: 15px;
+            transition: border-color .2s;
+            outline: none;
+            background: var(--cream);
+            color: var(--text-dark);
+        }
 
-    .btn-login {
-      width:100%; padding:13px;
-      background:linear-gradient(135deg, var(--green-dark), var(--green-light));
-      color:white;
-      border:none;
-      border-radius:var(--r-sm);
-      font-family:'Tajawal',sans-serif;
-      font-size:16px;
-      font-weight:700;
-      cursor:pointer;
-      transition:all .2s;
-      box-shadow:0 4px 14px rgba(26,92,56,.35);
-      margin-top:6px;
-    }
+        .form-input:focus {
+            border-color: var(--green-dark);
+        }
 
-    .btn-login:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(26,92,56,.45); }
-    .btn-login:disabled { opacity:.6; cursor:not-allowed; transform:none; }
+        .btn-login {
+            width: 100%;
+            padding: 13px;
+            background: linear-gradient(135deg, var(--green-dark), var(--green-light));
+            color: white;
+            border: none;
+            border-radius: var(--r-sm);
+            font-family: 'Tajawal', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .2s;
+            box-shadow: 0 4px 14px rgba(26, 92, 56, .35);
+            margin-top: 6px;
+        }
 
-    .error-box {
-      background:#fef2f2; border:1px solid #fecaca;
-      color:var(--danger);
-      padding:10px 14px; border-radius:var(--r-sm);
-      font-size:13px; margin-top:12px; display:none;
-    }
+        .btn-login:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(26, 92, 56, .45);
+        }
 
-    .error-box.show { display:block; }
+        .btn-login:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+            transform: none;
+        }
 
-    /* ═══════════════════════════════════════
+        .error-box {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: var(--danger);
+            padding: 10px 14px;
+            border-radius: var(--r-sm);
+            font-size: 13px;
+            margin-top: 12px;
+            display: none;
+        }
+
+        .error-box.show {
+            display: block;
+        }
+
+        /* ═══════════════════════════════════════
        TOP BAR
     ═══════════════════════════════════════ */
-    .topbar {
-      background:linear-gradient(135deg, var(--green-darkest), var(--green-dark));
-      padding:0 18px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      height:60px;
-      box-shadow:0 2px 12px rgba(0,0,0,.25);
-      position:sticky; top:0; z-index:100;
-    }
+        .topbar {
+            background: linear-gradient(135deg, var(--green-darkest), var(--green-dark));
+            padding: 0 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 60px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, .25);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
 
-    .topbar-left { display:flex; align-items:center; gap:10px; }
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-    .topbar-logo {
-      width:34px; height:34px; border-radius:8px;
-      object-fit:contain; border:2px solid var(--gold); background:var(--green-darkest);
-    }
+        .topbar-logo {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            object-fit: contain;
+            border: 2px solid var(--gold);
+            background: var(--green-darkest);
+        }
 
-    .topbar-title { font-size:15px; font-weight:700; color:white; line-height:1.2; }
-    .topbar-sub   { font-size:10.5px; color:rgba(255,255,255,.65); }
+        .topbar-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: white;
+            line-height: 1.2;
+        }
 
-    .topbar-right { display:flex; align-items:center; gap:8px; }
+        .topbar-sub {
+            font-size: 10.5px;
+            color: rgba(255, 255, 255, .65);
+        }
 
-    .role-pill {
-      background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.25);
-      border-radius:20px; padding:5px 12px;
-      font-size:12px; color:white; font-weight:600;
-    }
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
 
-    .btn-out {
-      background:rgba(220,38,38,.2); border:1px solid rgba(220,38,38,.4);
-      color:#fca5a5; padding:5px 12px;
-      border-radius:20px; cursor:pointer;
-      font-family:'Tajawal',sans-serif; font-size:12px; font-weight:600;
-      transition:all .2s;
-    }
+        .role-pill {
+            background: rgba(255, 255, 255, .14);
+            border: 1px solid rgba(255, 255, 255, .25);
+            border-radius: 20px;
+            padding: 5px 12px;
+            font-size: 12px;
+            color: white;
+            font-weight: 600;
+        }
 
-    .btn-out:hover { background:rgba(220,38,38,.35); }
+        .btn-out {
+            background: rgba(220, 38, 38, .2);
+            border: 1px solid rgba(220, 38, 38, .4);
+            color: #fca5a5;
+            padding: 5px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all .2s;
+        }
 
-    /* ── TABS ── */
-    .tab-nav {
-      background:white;
-      display:flex;
-      border-bottom:2px solid #e9ecef;
-      overflow-x:auto; scrollbar-width:none;
-    }
+        .btn-out:hover {
+            background: rgba(220, 38, 38, .35);
+        }
 
-    .tab-nav::-webkit-scrollbar { display:none; }
+        /* ── TABS ── */
+        .tab-nav {
+            background: white;
+            display: flex;
+            border-bottom: 2px solid #e9ecef;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
 
-    .tab-btn {
-      padding:12px 18px;
-      font-family:'Tajawal',sans-serif;
-      font-size:14px; font-weight:600;
-      color:var(--text-muted);
-      border:none; background:none;
-      cursor:pointer;
-      white-space:nowrap;
-      border-bottom:3px solid transparent;
-      margin-bottom:-2px;
-      transition:all .2s;
-    }
+        .tab-nav::-webkit-scrollbar {
+            display: none;
+        }
 
-    .tab-btn.active { color:var(--green-dark); border-bottom-color:var(--green-dark); }
+        .tab-btn {
+            padding: 12px 18px;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-muted);
+            border: none;
+            background: none;
+            cursor: pointer;
+            white-space: nowrap;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all .2s;
+        }
 
-    .tab-pane { display:none; padding:18px; }
-    .tab-pane.active { display:block; }
+        .tab-btn.active {
+            color: var(--green-dark);
+            border-bottom-color: var(--green-dark);
+        }
 
-    /* ── CARDS ── */
-    .card {
-      background:white;
-      border-radius:var(--r);
-      padding:18px;
-      box-shadow:0 1px 8px rgba(0,0,0,.06);
-      margin-bottom:14px;
-    }
+        .tab-pane {
+            display: none;
+            padding: 18px;
+        }
 
-    .card-head {
-      font-size:15px; font-weight:700;
-      color:var(--green-darkest);
-      margin-bottom:14px;
-      display:flex; align-items:center; gap:7px;
-    }
+        .tab-pane.active {
+            display: block;
+        }
 
-    /* ── STATS ── */
-    .stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px; }
+        /* ── CARDS ── */
+        .card {
+            background: white;
+            border-radius: var(--r);
+            padding: 18px;
+            box-shadow: 0 1px 8px rgba(0, 0, 0, .06);
+            margin-bottom: 14px;
+        }
 
-    .stat-card {
-      background:white; border-radius:var(--r);
-      padding:18px; text-align:center;
-      box-shadow:0 1px 8px rgba(0,0,0,.06);
-    }
+        .card-head {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--green-darkest);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
 
-    .stat-card:nth-child(1) { border-top:4px solid var(--green-dark); }
-    .stat-card:nth-child(2) { border-top:4px solid var(--gold); }
-    .stat-card:nth-child(3) { border-top:4px solid var(--info); }
-    .stat-card:nth-child(4) { border-top:4px solid var(--success); }
+        /* ── STATS ── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
 
-    .stat-num  { font-size:30px; font-weight:900; color:var(--green-darkest); }
-    .stat-lbl  { font-size:11.5px; color:var(--text-muted); margin-top:3px; }
+        .stat-card {
+            background: white;
+            border-radius: var(--r);
+            padding: 18px;
+            text-align: center;
+            box-shadow: 0 1px 8px rgba(0, 0, 0, .06);
+        }
 
-    /* date banner */
-    .date-banner {
-      background:linear-gradient(135deg, var(--green-darkest), var(--green-dark));
-      color:white; padding:14px 18px;
-      border-radius:var(--r); margin-bottom:16px;
-      display:flex; align-items:center; justify-content:space-between;
-    }
+        .stat-card:nth-child(1) {
+            border-top: 4px solid var(--green-dark);
+        }
 
-    .date-banner .lbl { font-size:11px; opacity:.75; }
-    .date-banner .val { font-size:16px; font-weight:700; margin-top:2px; }
-    .date-banner .clk { font-size:22px; font-weight:900; font-variant-numeric:tabular-nums; }
+        .stat-card:nth-child(2) {
+            border-top: 4px solid var(--gold);
+        }
 
-    /* ── TABLE ── */
-    .tbl-wrap { overflow-x:auto; }
+        .stat-card:nth-child(3) {
+            border-top: 4px solid var(--info);
+        }
 
-    table { width:100%; border-collapse:collapse; font-size:14px; }
+        .stat-card:nth-child(4) {
+            border-top: 4px solid var(--success);
+        }
 
-    th {
-      background:var(--green-darkest); color:white;
-      padding:11px 13px; text-align:left; font-weight:600;
-    }
+        .stat-num {
+            font-size: 30px;
+            font-weight: 900;
+            color: var(--green-darkest);
+        }
 
-    td { padding:11px 13px; border-bottom:1px solid #f3f4f6; color:var(--text-dark); }
-    tr:hover td { background:#f9fafb; }
+        .stat-lbl {
+            font-size: 11.5px;
+            color: var(--text-muted);
+            margin-top: 3px;
+        }
 
-    .badge {
-      display:inline-block; padding:2px 9px;
-      border-radius:20px; font-size:12px; font-weight:700;
-    }
+        /* date banner */
+        .date-banner {
+            background: linear-gradient(135deg, var(--green-darkest), var(--green-dark));
+            color: white;
+            padding: 14px 18px;
+            border-radius: var(--r);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
 
-    .b-green  { background:#dcfce7; color:#15803d; }
-    .b-red    { background:#fee2e2; color:#b91c1c; }
-    .b-blue   { background:#dbeafe; color:#1d4ed8; }
-    .b-yellow { background:#fef9c3; color:#854d0e; }
+        .date-banner .lbl {
+            font-size: 11px;
+            opacity: .75;
+        }
 
-    /* ── BUTTONS ── */
-    .btn {
-      padding:8px 16px; border-radius:8px; border:none;
-      cursor:pointer; font-family:'Tajawal',sans-serif;
-      font-size:13px; font-weight:700;
-      transition:all .2s;
-    }
+        .date-banner .val {
+            font-size: 16px;
+            font-weight: 700;
+            margin-top: 2px;
+        }
 
-    .btn-green  { background:var(--green-dark); color:white; }
-    .btn-green:hover { background:var(--green-darkest); }
-    .btn-red    { background:var(--danger); color:white; }
-    .btn-red:hover { background:#b91c1c; }
-    .btn-gold   { background:var(--gold); color:white; }
-    .btn-gold:hover { background:#b8911e; }
-    .btn-ghost  { background:#f3f4f6; color:#374151; }
-    .btn-ghost:hover { background:#e5e7eb; }
-    .btn-sm     { padding:5px 9px; font-size:12px; }
+        .date-banner .clk {
+            font-size: 22px;
+            font-weight: 900;
+            font-variant-numeric: tabular-nums;
+        }
 
-    /* ── QR SECTION ── */
-    .qr-wrap {
-      display:flex; flex-direction:column;
-      align-items:center; padding:20px 0;
-    }
+        /* ── TABLE ── */
+        .tbl-wrap {
+            overflow-x: auto;
+        }
 
-    .qr-frame {
-      background:white;
-      border:4px solid var(--green-dark);
-      border-radius:16px; padding:16px;
-      box-shadow:0 8px 32px rgba(26,92,56,.15);
-      margin-bottom:16px;
-      min-width:252px; min-height:252px;
-      display:flex; align-items:center; justify-content:center;
-    }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
 
-    /* ── SCANNER ── */
-    .scanner-wrap { max-width:420px; margin:0 auto; }
+        th {
+            background: var(--green-darkest);
+            color: white;
+            padding: 11px 13px;
+            text-align: left;
+            font-weight: 600;
+        }
 
-    #camera-view {
-      width:100%; border-radius:var(--r);
-      display:block;
-    }
+        td {
+            padding: 11px 13px;
+            border-bottom: 1px solid #f3f4f6;
+            color: var(--text-dark);
+        }
 
-    /* ── ATTENDANCE ITEMS ── */
-    .att-item {
-      display:flex; align-items:center;
-      justify-content:space-between;
-      padding:11px 14px;
-      border-bottom:1px solid #f3f4f6;
-    }
+        tr:hover td {
+            background: #f9fafb;
+        }
 
-    .att-item:last-child { border-bottom:none; }
+        .badge {
+            display: inline-block;
+            padding: 2px 9px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
 
-    .att-name { font-weight:700; font-size:14px; }
-    .att-sub  { font-size:12px; color:var(--text-muted); margin-top:2px; }
+        .b-green {
+            background: #dcfce7;
+            color: #15803d;
+        }
 
-    /* empty */
-    .empty {
-      text-align:center; padding:36px 20px;
-      color:var(--text-muted);
-    }
+        .b-red {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
 
-    .empty-ico { font-size:38px; margin-bottom:10px; }
+        .b-blue {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
 
-    /* ── GURU BANNER ── */
-    .guru-banner {
-      background:linear-gradient(135deg, var(--green-darkest), var(--green-mid));
-      padding:20px; text-align:center; color:white;
-    }
+        .b-yellow {
+            background: #fef9c3;
+            color: #854d0e;
+        }
 
-    .guru-banner .b-text { font-family:'Amiri',serif; font-size:17px; direction:rtl; opacity:.9; margin-bottom:8px; }
-    .guru-name { font-size:20px; font-weight:900; margin-bottom:6px; }
-    .guru-pill {
-      display:inline-block; background:rgba(255,255,255,.18);
-      border:1px solid rgba(255,255,255,.35);
-      border-radius:20px; padding:4px 16px; font-size:12px;
-    }
+        /* ── BUTTONS ── */
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            transition: all .2s;
+        }
 
-    /* today status card */
-    .today-card {
-      border-radius:var(--r); padding:20px;
-      text-align:center; margin-bottom:14px;
-    }
+        .btn-green {
+            background: var(--green-dark);
+            color: white;
+        }
 
-    .today-card.hadir  { background:#dcfce7; border:2px solid #86efac; }
-    .today-card.belum  { background:#fef3c7; border:2px solid #fcd34d; }
-    .today-card .tc-ico  { font-size:34px; margin-bottom:8px; }
-    .today-card .tc-title { font-size:16px; font-weight:700; }
-    .today-card .tc-sub   { font-size:13px; margin-top:4px; opacity:.75; }
+        .btn-green:hover {
+            background: var(--green-darkest);
+        }
 
-    .scan-big-btn {
-      width:100%; max-width:300px; margin:0 auto;
-      padding:15px 20px;
-      background:linear-gradient(135deg, var(--green-dark), var(--green-light));
-      color:white; border:none;
-      border-radius:var(--r);
-      font-family:'Tajawal',sans-serif; font-size:16px; font-weight:700;
-      cursor:pointer;
-      display:flex; align-items:center; justify-content:center; gap:10px;
-      box-shadow:0 4px 16px rgba(26,92,56,.35);
-      transition:all .2s;
-    }
+        .btn-red {
+            background: var(--danger);
+            color: white;
+        }
 
-    .scan-big-btn:hover { transform:translateY(-2px); }
+        .btn-red:hover {
+            background: #b91c1c;
+        }
 
-    /* ── MODAL ── */
-    .overlay {
-      display:none; position:fixed; inset:0;
-      background:rgba(0,0,0,.5); z-index:300;
-      align-items:center; justify-content:center; padding:20px;
-    }
+        .btn-gold {
+            background: var(--gold);
+            color: white;
+        }
 
-    .overlay.show { display:flex; }
+        .btn-gold:hover {
+            background: #b8911e;
+        }
 
-    .modal {
-      background:white; border-radius:var(--r);
-      padding:26px; max-width:440px; width:100%;
-      box-shadow:var(--shadow-lg);
-    }
+        .btn-ghost {
+            background: #f3f4f6;
+            color: #374151;
+        }
 
-    .modal-title { font-size:18px; font-weight:700; color:var(--green-darkest); margin-bottom:18px; }
+        .btn-ghost:hover {
+            background: #e5e7eb;
+        }
 
-    /* ── TOAST ── */
-    .toast {
-      position:fixed; bottom:20px; left:50%;
-      transform:translateX(-50%) translateY(120px);
-      background:var(--green-darkest); color:white;
-      padding:11px 22px; border-radius:30px;
-      font-size:14px; font-weight:600;
-      z-index:400; transition:transform .3s cubic-bezier(.4,0,.2,1);
-      white-space:nowrap;
-      box-shadow:0 4px 20px rgba(0,0,0,.3);
-    }
+        .btn-sm {
+            padding: 5px 9px;
+            font-size: 12px;
+        }
 
-    .toast.show { transform:translateX(-50%) translateY(0); }
-    .toast.ok   { background:var(--success); }
-    .toast.err  { background:var(--danger); }
+        /* ── QR SECTION ── */
+        .qr-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0;
+        }
 
-    /* ── SPINNER ── */
-    .spin {
-      display:inline-block; width:15px; height:15px;
-      border:2px solid rgba(255,255,255,.35);
-      border-top-color:white; border-radius:50%;
-      animation:spin .7s linear infinite;
-    }
+        .qr-frame {
+            background: white;
+            border: 4px solid var(--green-dark);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 8px 32px rgba(26, 92, 56, .15);
+            margin-bottom: 16px;
+            min-width: 252px;
+            min-height: 252px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-    @keyframes spin { to { transform:rotate(360deg); } }
+        /* ── SCANNER ── */
+        .scanner-wrap {
+            max-width: 420px;
+            margin: 0 auto;
+        }
 
-    /* ── responsive ── */
-    @media(max-width:480px) {
-      .login-card { padding:30px 20px; }
-      .stats-grid { grid-template-columns:1fr 1fr; }
-      .tab-btn { padding:11px 13px; font-size:13px; }
-    }
-  </style>
+        #camera-view {
+            width: 100%;
+            border-radius: var(--r);
+            display: block;
+        }
+
+        /* ── ATTENDANCE ITEMS ── */
+        .att-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 11px 14px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .att-item:last-child {
+            border-bottom: none;
+        }
+
+        .att-name {
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .att-sub {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* empty */
+        .empty {
+            text-align: center;
+            padding: 36px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-ico {
+            font-size: 38px;
+            margin-bottom: 10px;
+        }
+
+        /* ── GURU BANNER ── */
+        .guru-banner {
+            background: linear-gradient(135deg, var(--green-darkest), var(--green-mid));
+            padding: 20px;
+            text-align: center;
+            color: white;
+        }
+
+        .guru-banner .b-text {
+            font-family: 'Amiri', serif;
+            font-size: 17px;
+            direction: rtl;
+            opacity: .9;
+            margin-bottom: 8px;
+        }
+
+        .guru-name {
+            font-size: 20px;
+            font-weight: 900;
+            margin-bottom: 6px;
+        }
+
+        .guru-pill {
+            display: inline-block;
+            background: rgba(255, 255, 255, .18);
+            border: 1px solid rgba(255, 255, 255, .35);
+            border-radius: 20px;
+            padding: 4px 16px;
+            font-size: 12px;
+        }
+
+        /* today status card */
+        .today-card {
+            border-radius: var(--r);
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 14px;
+        }
+
+        .today-card.hadir {
+            background: #dcfce7;
+            border: 2px solid #86efac;
+        }
+
+        .today-card.belum {
+            background: #fef3c7;
+            border: 2px solid #fcd34d;
+        }
+
+        .today-card .tc-ico {
+            font-size: 34px;
+            margin-bottom: 8px;
+        }
+
+        .today-card .tc-title {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .today-card .tc-sub {
+            font-size: 13px;
+            margin-top: 4px;
+            opacity: .75;
+        }
+
+        .scan-big-btn {
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, var(--green-dark), var(--green-light));
+            color: white;
+            border: none;
+            border-radius: var(--r);
+            font-family: 'Tajawal', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 4px 16px rgba(26, 92, 56, .35);
+            transition: all .2s;
+        }
+
+        .scan-big-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* ── MODAL ── */
+        .overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .5);
+            z-index: 300;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: var(--r);
+            padding: 26px;
+            max-width: 440px;
+            width: 100%;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--green-darkest);
+            margin-bottom: 18px;
+        }
+
+        /* ── TOAST ── */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(120px);
+            background: var(--green-darkest);
+            color: white;
+            padding: 11px 22px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 400;
+            transition: transform .3s cubic-bezier(.4, 0, .2, 1);
+            white-space: nowrap;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, .3);
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast.ok {
+            background: var(--success);
+        }
+
+        .toast.err {
+            background: var(--danger);
+        }
+
+        /* ── SPINNER ── */
+        .spin {
+            display: inline-block;
+            width: 15px;
+            height: 15px;
+            border: 2px solid rgba(255, 255, 255, .35);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin .7s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ── responsive ── */
+        @media(max-width:480px) {
+            .login-card {
+                padding: 30px 20px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .tab-btn {
+                padding: 11px 13px;
+                font-size: 13px;
+            }
+        }
+
+        /* ── ISLAMIC LOADER ── */
+        .islamic-loader {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .islamic-loader .loader-ikon {
+            font-size: 46px;
+            margin-bottom: 10px;
+            animation: bounce-gentle 1.5s infinite ease-in-out;
+        }
+
+        .islamic-loader .loader-teks {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--green-darkest);
+            margin-bottom: 6px;
+        }
+
+        .islamic-loader .loader-arab {
+            font-family: 'Amiri', serif;
+            font-size: 18px;
+            color: var(--green-mid);
+            margin-bottom: 2px;
+        }
+
+        .islamic-loader .loader-arti {
+            font-size: 11.5px;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        @keyframes bounce-gentle {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-8px);
+            }
+        }
+    </style>
 </head>
+
 <body>
 
-<!-- ═══════════════════════════════════════════════
+    <!-- ═══════════════════════════════════════════════
      LOGIN PAGE
 ═══════════════════════════════════════════════ -->
-<div id="page-login" class="page active">
-  <div class="login-card">
-    <div class="login-header">
-      <img id="logo-login"
-           src="https://raw.githubusercontent.com/gamesfaqih2025-byte/AL-KHIDMAT-DIGITAL/refs/heads/main/Desain%20tanpa%20judul.png"
-           class="login-logo" alt="Logo">
-      <div class="bismillah-text">بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ</div>
-      <div class="app-name">Al-Khidmat Digital</div>
-      <div class="app-subtitle">Sistem Manajemen Rumah Qur'an Digital</div>
-    </div>
+    <div id="page-login" class="page active">
+        <div class="login-card">
+            <div class="login-header">
+                <img id="logo-login"
+                    src="https://raw.githubusercontent.com/gamesfaqih2025-byte/AL-KHIDMAT-DIGITAL/refs/heads/main/Desain%20tanpa%20judul.png"
+                    class="login-logo" alt="Logo">
+                <div class="bismillah-text">بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ</div>
+                <div class="app-name">Al-Khidmat Digital</div>
+                <div class="app-subtitle">Sistem Manajemen Rumah Qur'an Digital</div>
+            </div>
 
-    <div class="gold-line"></div>
+            <div class="gold-line"></div>
 
-    <div class="form-group" style="margin-bottom:18px;">
-      <div class="form-label">Pilih Role</div>
-      <div class="role-grid">
-        <button class="role-btn active" id="rbtn-manajemen" onclick="pickRole('manajemen')">
-          <span class="role-icon">👑</span>Manajemen
-        </button>
-        <button class="role-btn" id="rbtn-guru" onclick="pickRole('guru')">
-          <span class="role-icon">📚</span>Guru / Muaddib
-        </button>
-      </div>
-    </div>
+            <div class="form-group" style="margin-bottom:18px;">
+                <div class="form-label">Pilih Role</div>
+                <div class="role-grid">
+                    <button class="role-btn active" id="rbtn-manajemen" onclick="pickRole('manajemen')">
+                        <span class="role-icon">👑</span>Manajemen
+                    </button>
+                    <button class="role-btn" id="rbtn-guru" onclick="pickRole('guru')">
+                        <span class="role-icon">📚</span>Guru / Muaddib
+                    </button>
+                </div>
+            </div>
 
-    <div id="frm-manajemen">
-      <div class="form-group">
-        <label class="form-label">Password Manajemen</label>
-        <input type="password" id="inp-m-pass" class="form-input" placeholder="••••••••"
-               onkeypress="if(event.key==='Enter') doLogin()">
-      </div>
-    </div>
+            <div id="frm-manajemen">
+                <div class="form-group">
+                    <label class="form-label">Password Manajemen</label>
+                    <input type="password" id="inp-m-pass" class="form-input" placeholder="••••••••"
+                        onkeypress="if(event.key==='Enter') doLogin()">
+                </div>
+            </div>
 
-    <div id="frm-guru" style="display:none;">
-      <div class="form-group">
-        <label class="form-label">ID Guru</label>
-        <input type="text" id="inp-g-id" class="form-input" placeholder="Contoh: GURU001"
-               style="text-transform:uppercase">
-        <div style="font-size:11.5px; color:var(--text-muted); margin-top:4px;">
-          ID diberikan oleh Manajemen
+            <div id="frm-guru" style="display:none;">
+                <div class="form-group">
+                    <label class="form-label">ID Guru</label>
+                    <input type="text" id="inp-g-id" class="form-input" placeholder="Contoh: GURU001"
+                        style="text-transform:uppercase">
+                    <div style="font-size:11.5px; color:var(--text-muted); margin-top:4px;">
+                        ID diberikan oleh Manajemen
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" id="inp-g-pass" class="form-input" placeholder="••••••••"
+                        onkeypress="if(event.key==='Enter') doLogin()">
+                </div>
+            </div>
+
+            <div id="login-err" class="error-box"></div>
+
+            <button id="btn-login" class="btn-login" onclick="doLogin()">Masuk →</button>
+
+            <div style="text-align:center; margin-top:16px; font-size:11px; color:var(--text-muted);">
+                Al-Khidmat Digital v1.0 · Sistem Absensi Guru
+            </div>
         </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Password</label>
-        <input type="password" id="inp-g-pass" class="form-input" placeholder="••••••••"
-               onkeypress="if(event.key==='Enter') doLogin()">
-      </div>
     </div>
 
-    <div id="login-err" class="error-box"></div>
 
-    <button id="btn-login" class="btn-login" onclick="doLogin()">Masuk →</button>
-
-    <div style="text-align:center; margin-top:16px; font-size:11px; color:var(--text-muted);">
-      Al-Khidmat Digital v1.0 · Sistem Absensi Guru
-    </div>
-  </div>
-</div>
-
-
-<!-- ═══════════════════════════════════════════════
+    <!-- ═══════════════════════════════════════════════
      MANAJEMEN PAGE
 ═══════════════════════════════════════════════ -->
-<div id="page-manajemen" class="page">
+    <div id="page-manajemen" class="page">
 
-  <!-- Topbar -->
-  <div class="topbar">
-    <div class="topbar-left">
-      <img src="https://raw.githubusercontent.com/gamesfaqih2025-byte/AL-KHIDMAT-DIGITAL/refs/heads/main/Desain%20tanpa%20judul.png"
-           class="topbar-logo" alt="">
-      <div>
-        <div class="topbar-title">Al-Khidmat Digital</div>
-        <div class="topbar-sub">Panel Manajemen</div>
-      </div>
-    </div>
-    <div class="topbar-right">
-      <span class="role-pill">👑 Manajemen</span>
-      <button class="btn-out" onclick="doLogout()">⏏ Keluar</button>
-    </div>
-  </div>
-
-  <!-- Tab Nav -->
-  <div class="tab-nav" id="m-tab-nav">
-    <button class="tab-btn active" onclick="mTab('dashboard',this)">📊 Dashboard</button>
-    <button class="tab-btn"        onclick="mTab('guru',this)">👥 Data Guru</button>
-    <button class="tab-btn"        onclick="mTab('qr',this)">📷 QR Absen</button>
-    <button class="tab-btn"        onclick="mTab('laporan',this)">📋 Laporan</button>
-  </div>
-
-  <!-- DASHBOARD -->
-  <div id="m-pane-dashboard" class="tab-pane active">
-    <div class="date-banner">
-      <div>
-        <div class="lbl">Hari ini</div>
-        <div class="val" id="today-str">–</div>
-      </div>
-      <div class="clk" id="live-clock">00:00:00</div>
-    </div>
-
-    <div class="stats-grid">
-      <div class="stat-card"><div class="stat-num" id="s-guru">–</div><div class="stat-lbl">Total Guru Aktif</div></div>
-      <div class="stat-card"><div class="stat-num" id="s-hadir">–</div><div class="stat-lbl">Hadir Hari Ini</div></div>
-      <div class="stat-card"><div class="stat-num" id="s-bulan">–</div><div class="stat-lbl">Absen Bulan Ini</div></div>
-      <div class="stat-card"><div class="stat-num" id="s-qr">–</div><div class="stat-lbl">Status QR Hari Ini</div></div>
-    </div>
-
-    <div class="card">
-      <div class="card-head">✅ Kehadiran Hari Ini</div>
-      <div id="list-today-att">
-        <div class="empty"><div class="empty-ico">📋</div>Belum ada kehadiran hari ini</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- DATA GURU -->
-  <div id="m-pane-guru" class="tab-pane">
-    <div class="card">
-      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
-        <div class="card-head" style="margin:0;">👥 Daftar Guru / Muaddib</div>
-        <button class="btn btn-green" onclick="openAddTeacher()">+ Tambah Guru</button>
-      </div>
-      <div class="tbl-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>ID Login</th><th>Nama</th><th>Bidang</th><th>Status</th><th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody id="tbody-guru">
-            <tr><td colspan="5" style="text-align:center;padding:20px;color:#9ca3af;">Memuat...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- QR CODE -->
-  <div id="m-pane-qr" class="tab-pane">
-    <div class="card">
-      <div class="card-head">📷 QR Code Absensi</div>
-      <p style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">
-        Generate QR Code harian dan pasang di tempat yang terlihat oleh guru.
-        Guru akan scan QR ini untuk mencatat absensi masuk.
-      </p>
-      <div id="qr-status-msg" style="margin-bottom:14px;"></div>
-      <div class="qr-wrap">
-        <div class="qr-frame">
-          <div id="qr-display">
-            <div style="text-align:center; color:#9ca3af; font-size:13px; padding:20px;">
-              QR belum digenerate
+        <!-- Topbar -->
+        <div class="topbar">
+            <div class="topbar-left">
+                <img src="https://raw.githubusercontent.com/gamesfaqih2025-byte/AL-KHIDMAT-DIGITAL/refs/heads/main/Desain%20tanpa%20judul.png"
+                    class="topbar-logo" alt="">
+                <div>
+                    <div class="topbar-title">Al-Khidmat Digital</div>
+                    <div class="topbar-sub">Panel Manajemen</div>
+                </div>
             </div>
-          </div>
+            <div class="topbar-right">
+                <span class="role-pill">👑 Manajemen</span>
+                <button class="btn-out" onclick="doLogout()">⏏ Keluar</button>
+            </div>
         </div>
-        <div id="qr-info" style="text-align:center; font-size:12px; color:var(--text-muted);"></div>
-      </div>
-      <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
-        <button class="btn btn-green" onclick="generateQR()">🔄 Generate QR Baru</button>
-        <button class="btn btn-gold"  onclick="printQR()">🖨️ Cetak QR</button>
-      </div>
+
+        <!-- Tab Nav Manajemen -->
+        <div class="tab-nav" id="m-tab-nav">
+            <button class="tab-btn active" onclick="mTab('dashboard',this)">📊 Dashboard</button>
+            <button class="tab-btn" onclick="mTab('guru',this)">👥 Data Guru</button>
+            <button class="tab-btn" onclick="mTab('qr',this)">📷 QR Absen</button>
+            <button class="tab-btn" onclick="mTab('laporan',this)">📋 Laporan</button>
+        </div>
+
+        <!-- DASHBOARD -->
+        <div id="m-pane-dashboard" class="tab-pane active">
+            <div class="date-banner">
+                <div>
+                    <div class="lbl">Hari ini</div>
+                    <div class="val" id="today-str">–</div>
+                </div>
+                <div class="clk" id="live-clock">00:00:00</div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-num" id="s-guru">–</div>
+                    <div class="stat-lbl">Total Guru Aktif</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-num" id="s-hadir">–</div>
+                    <div class="stat-lbl">Hadir Hari Ini</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-num" id="s-bulan">–</div>
+                    <div class="stat-lbl">Absen Bulan Ini</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-num" id="s-qr">–</div>
+                    <div class="stat-lbl">Status QR Hari Ini</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-head">✅ Kehadiran Hari Ini</div>
+                <div id="list-today-att">
+                    <div class="empty">
+                        <div class="empty-ico">📋</div>Belum ada kehadiran hari ini
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DATA GURU -->
+        <div id="m-pane-guru" class="tab-pane">
+            <div class="card">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+                    <div class="card-head" style="margin:0;">👥 Daftar Guru / Muaddib</div>
+                    <button class="btn btn-green" onclick="openAddTeacher()">+ Tambah Guru</button>
+                </div>
+                <div class="tbl-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID Login</th>
+                                <th>Nama</th>
+                                <th>Bidang</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-guru">
+                            <tr>
+                                <td colspan="5" style="text-align:center;padding:20px;color:#9ca3af;">Memuat...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- QR CODE -->
+        <div id="m-pane-qr" class="tab-pane">
+            <div class="card">
+                <div class="card-head">📷 QR Code Absensi</div>
+                <p style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">
+                    Generate QR Code harian dan pasang di tempat yang terlihat oleh guru.
+                    Guru akan scan QR ini untuk mencatat absensi masuk.
+                </p>
+                <div id="qr-status-msg" style="margin-bottom:14px;"></div>
+                <div class="qr-wrap">
+                    <div class="qr-frame">
+                        <div id="qr-display">
+                            <div style="text-align:center; color:#9ca3af; font-size:13px; padding:20px;">
+                                QR belum digenerate
+                            </div>
+                        </div>
+                    </div>
+                    <div id="qr-info" style="text-align:center; font-size:12px; color:var(--text-muted);"></div>
+                </div>
+                <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+                    <button class="btn btn-green" onclick="generateQR()">🔄 Generate QR Baru</button>
+                    <button class="btn btn-gold" onclick="printQR()">🖨️ Cetak QR</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- LAPORAN -->
+        <div id="m-pane-laporan" class="tab-pane">
+            <div class="card">
+                <div class="card-head">📋 Laporan Kehadiran</div>
+                <div style="display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
+                    <input type="date" id="filter-tgl" class="form-input" style="flex:1; min-width:140px;"
+                        onchange="loadReport()">
+                    <button class="btn btn-green" onclick="loadReport()">Tampilkan</button>
+                </div>
+                <div id="report-wrap">
+                    <div class="empty">
+                        <div class="empty-ico">📅</div>Pilih tanggal untuk melihat laporan
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-
-  <!-- LAPORAN -->
-  <div id="m-pane-laporan" class="tab-pane">
-    <div class="card">
-      <div class="card-head">📋 Laporan Kehadiran</div>
-      <div style="display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
-        <input type="date" id="filter-tgl" class="form-input" style="flex:1; min-width:140px;"
-               onchange="loadReport()">
-        <button class="btn btn-green" onclick="loadReport()">Tampilkan</button>
-      </div>
-      <div id="report-wrap">
-        <div class="empty"><div class="empty-ico">📅</div>Pilih tanggal untuk melihat laporan</div>
-      </div>
-    </div>
-  </div>
-</div>
 
 
-<!-- ═══════════════════════════════════════════════
+    <!-- ═══════════════════════════════════════════════
      GURU PAGE
 ═══════════════════════════════════════════════ -->
-<div id="page-guru" class="page">
+    <div id="page-guru" class="page">
 
-  <!-- Topbar -->
-  <div class="topbar">
-    <div class="topbar-left">
-      <img src="https://raw.githubusercontent.com/gamesfaqih2025-byte/AL-KHIDMAT-DIGITAL/refs/heads/main/Desain%20tanpa%20judul.png"
-           class="topbar-logo" alt="">
-      <div>
-        <div class="topbar-title">Al-Khidmat Digital</div>
-        <div class="topbar-sub">Absensi Guru</div>
-      </div>
-    </div>
-    <div class="topbar-right">
-      <button class="btn-out" onclick="doLogout()">⏏ Keluar</button>
-    </div>
-  </div>
-
-  <!-- Guru banner -->
-  <div class="guru-banner">
-    <div class="b-text">بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ</div>
-    <div class="guru-name" id="g-display-name">–</div>
-    <span class="guru-pill" id="g-display-id">ID: –</span>
-  </div>
-
-  <!-- Tab Nav -->
-  <div class="tab-nav">
-    <button class="tab-btn active" onclick="gTab('scan',this)">📷 Scan Absen</button>
-    <button class="tab-btn"        onclick="gTab('riwayat',this)">📋 Riwayat Saya</button>
-  </div>
-
-  <!-- SCAN TAB -->
-  <div id="g-pane-scan" class="tab-pane active">
-
-    <div id="today-status-card" class="today-card belum">
-      <div class="tc-ico">⏳</div>
-      <div class="tc-title">Belum Absen Hari Ini</div>
-      <div class="tc-sub">Scan QR di sekolah untuk absen masuk</div>
-    </div>
-
-    <div class="card">
-      <div class="card-head" style="justify-content:center;">📷 Scan QR Code Absensi</div>
-      <p style="text-align:center; font-size:13px; color:var(--text-muted); margin-bottom:16px;">
-        Arahkan kamera ke QR Code yang terpasang di sekolah
-      </p>
-
-      <div class="scanner-wrap">
-        <!-- Placeholder -->
-        <div id="scan-placeholder" style="text-align:center; padding:30px 0;">
-          <div style="font-size:56px; margin-bottom:12px;">📷</div>
-          <div style="color:var(--text-muted); font-size:14px; margin-bottom:18px;">Kamera belum aktif</div>
-          <div style="display:flex; justify-content:center;">
-            <button class="scan-big-btn" onclick="startScan()" id="btn-open-cam">
-              📷 Buka Kamera &amp; Scan
-            </button>
-          </div>
-        </div>
-
-        <!-- Active scanner -->
-        <div id="scan-active" style="display:none;">
-          <video id="camera-view" autoplay playsinline muted></video>
-          <canvas id="scan-canvas" style="display:none;"></canvas>
-          <div style="text-align:center; margin-top:10px;">
-            <div id="scan-msg" style="font-size:13px; color:var(--text-muted); margin-bottom:10px;">
-              Mendeteksi QR Code...
+        <!-- Topbar -->
+        <div class="topbar">
+            <div class="topbar-left">
+                <img src="https://raw.githubusercontent.com/gamesfaqih2025-byte/AL-KHIDMAT-DIGITAL/refs/heads/main/Desain%20tanpa%20judul.png"
+                    class="topbar-logo" alt="">
+                <div>
+                    <div class="topbar-title">Al-Khidmat Digital</div>
+                    <div class="topbar-sub">Absensi Guru</div>
+                </div>
             </div>
-            <button class="btn btn-red" onclick="stopScan()">⏹ Hentikan Kamera</button>
-          </div>
+            <div class="topbar-right">
+                <button class="btn-out" onclick="doLogout()">⏏ Keluar</button>
+            </div>
         </div>
-      </div>
-    </div>
-  </div>
 
-  <!-- RIWAYAT TAB -->
-  <div id="g-pane-riwayat" class="tab-pane">
-    <div class="card">
-      <div class="card-head">📋 Riwayat Kehadiran Saya</div>
-      <div id="list-riwayat">
-        <div class="empty"><div class="empty-ico">📅</div>Memuat data...</div>
-      </div>
-    </div>
-  </div>
-</div>
+        <!-- Guru banner -->
+        <div class="guru-banner">
+            <div class="b-text">بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ</div>
+            <div class="guru-name" id="g-display-name">–</div>
+            <span class="guru-pill" id="g-display-id">ID: –</span>
+        </div>
+
+        <!-- Tab Nav Guru -->
+        <div class="tab-nav">
+            <button class="tab-btn active" onclick="gTab('scan',this)">📷 Scan Absen</button>
+            <button class="tab-btn" onclick="gTab('riwayat',this)">📋 Riwayat Saya</button>
+            <button class="tab-btn" onclick="gTab('profil',this)">👤 Profil</button>
+        </div>
+
+        <!-- SCAN TAB -->
+        <div id="g-pane-scan" class="tab-pane active">
+
+            <div id="today-status-card" class="today-card belum">
+                <div class="tc-ico">⏳</div>
+                <div class="tc-title">Belum Absen Hari Ini</div>
+                <div class="tc-sub">Scan QR di sekolah untuk absen masuk</div>
+            </div>
+
+            <div class="card">
+                <div class="card-head" style="justify-content:center;">📷 Scan QR Code Absensi</div>
+                <p style="text-align:center; font-size:13px; color:var(--text-muted); margin-bottom:16px;">
+                    Arahkan kamera ke QR Code yang terpasang di sekolah
+                </p>
+
+                <div class="scanner-wrap">
+                    <!-- Placeholder -->
+                    <div id="scan-placeholder" style="text-align:center; padding:30px 0;">
+                        <div style="font-size:56px; margin-bottom:12px;">📷</div>
+                        <div style="color:var(--text-muted); font-size:14px; margin-bottom:18px;">Kamera belum aktif
+                        </div>
+                        <div style="display:flex; justify-content:center;">
+                            <button class="scan-big-btn" onclick="startScan()" id="btn-open-cam">
+                                📷 Buka Kamera &amp; Scan
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Active scanner -->
+                    <div id="scan-active" style="display:none;">
+                        <video id="camera-view" autoplay playsinline muted></video>
+                        <canvas id="scan-canvas" style="display:none;"></canvas>
+                        <div style="text-align:center; margin-top:10px;">
+                            <div id="scan-msg" style="font-size:13px; color:var(--text-muted); margin-bottom:10px;">
+                                Mendeteksi QR Code...
+                            </div>
+                            <button class="btn btn-red" onclick="stopScan()">⏹ Hentikan Kamera</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIWAYAT TAB -->
+        <div id="g-pane-riwayat" class="tab-pane">
+            <div class="card">
+                <div class="card-head">📋 Riwayat Kehadiran Saya</div>
+                <div id="list-riwayat">
+                    <div class="empty">
+                        <div class="empty-ico">📅</div>Memuat data...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PROFIL TAB -->
+        <div id="g-pane-profil" class="tab-pane">
+            <div class="card">
+                <div class="card-head">👤 Pengaturan Akun</div>
+
+                <div class="form-group">
+                    <label class="form-label">ID Guru</label>
+                    <input type="text" id="prof-g-id" class="form-input" readonly
+                        style="background:#e5e7eb; cursor:not-allowed; color:var(--text-muted);">
+                    <div
+                        style="font-size:12px; color:var(--danger); margin-top:6px; font-weight:500; display:flex; gap:4px;">
+                        <span>⚠️</span> ID tidak bisa diedit. Hanya pihak manajemen yang dapat mengubah data ini.
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top:16px;">
+                    <label class="form-label">Nama Lengkap</label>
+                    <input type="text" id="prof-g-name" class="form-input" readonly
+                        style="background:#e5e7eb; cursor:not-allowed; color:var(--text-muted);">
+                </div>
+
+                <div class="form-group" style="margin-top:16px;">
+                    <label class="form-label">Ubah Password</label>
+                    <input type="text" id="prof-g-pass" class="form-input" placeholder="Masukkan password baru">
+                    <div style="font-size:11.5px; color:var(--text-muted); margin-top:6px;">
+                        * Password bawaan adalah <b>alhamdulilah</b>. Silakan ubah demi keamanan akun Anda.
+                    </div>
+                </div>
+
+                <button class="btn btn-green" style="width:100%; margin-top:12px; padding:12px;"
+                    onclick="updatePassword()">💾 Simpan Password</button>
+            </div>
+        </div>
+
+    </div> <!-- TUTUP GURU PAGE -->
 
 
-<!-- ═══════════════════════════════════════════════
+    <!-- ═══════════════════════════════════════════════
      MODAL: Tambah / Edit Guru
 ═══════════════════════════════════════════════ -->
-<div class="overlay" id="modal-guru">
-  <div class="modal">
-    <div class="modal-title" id="modal-guru-title">➕ Tambah Guru Baru</div>
+    <div class="overlay" id="modal-guru">
+        <div class="modal">
+            <div class="modal-title" id="modal-guru-title">➕ Tambah Guru Baru</div>
 
-    <div class="form-group">
-      <label class="form-label">ID Login <span style="color:var(--danger)">*</span></label>
-      <input type="text" id="inp-tid" class="form-input" placeholder="Contoh: GURU001"
-             style="text-transform:uppercase">
-      <div style="font-size:11.5px; color:var(--text-muted); margin-top:4px;">
-        ID ini digunakan guru untuk login
-      </div>
+            <div class="form-group">
+                <label class="form-label">ID Login <span style="color:var(--danger)">*</span></label>
+                <input type="text" id="inp-tid" class="form-input" placeholder="Contoh: GURU001"
+                    style="text-transform:uppercase">
+                <div style="font-size:11.5px; color:var(--text-muted); margin-top:4px;">
+                    ID ini digunakan guru untuk login
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Nama Lengkap <span style="color:var(--danger)">*</span></label>
+                <input type="text" id="inp-tname" class="form-input" placeholder="Nama guru / muaddib">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Bidang / Mata Pelajaran</label>
+                <input type="text" id="inp-tsubject" class="form-input" placeholder="Contoh: Tahfidz, Bahasa Arab">
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:18px;">
+                <button class="btn btn-green" onclick="saveTeacher()" style="flex:1;">💾 Simpan</button>
+                <button class="btn btn-ghost" onclick="closeModal('modal-guru')" style="flex:1;">Batal</button>
+            </div>
+        </div>
     </div>
 
-    <div class="form-group">
-      <label class="form-label">Nama Lengkap <span style="color:var(--danger)">*</span></label>
-      <input type="text" id="inp-tname" class="form-input" placeholder="Nama guru / muaddib">
-    </div>
 
-    <div class="form-group">
-      <label class="form-label">Bidang / Mata Pelajaran</label>
-      <input type="text" id="inp-tsubject" class="form-input" placeholder="Contoh: Tahfidz, Bahasa Arab">
-    </div>
-
-    <div style="display:flex; gap:10px; margin-top:18px;">
-      <button class="btn btn-green" onclick="saveTeacher()" style="flex:1;">💾 Simpan</button>
-      <button class="btn btn-ghost" onclick="closeModal('modal-guru')" style="flex:1;">Batal</button>
-    </div>
-  </div>
-</div>
-
-
-<!-- ═══════════════════════════════════════════════
+    <!-- ═══════════════════════════════════════════════
      MODAL: Absen Sukses
 ═══════════════════════════════════════════════ -->
-<div class="overlay" id="modal-sukses">
-  <div class="modal" style="text-align:center;">
-    <div style="font-size:60px; margin-bottom:12px;">✅</div>
-    <div class="modal-title" style="justify-content:center;">Absen Berhasil!</div>
-    <div id="sukses-detail" style="font-size:14px; color:var(--text-muted); margin-bottom:20px; line-height:1.8;"></div>
-    <button class="btn btn-green" style="width:100%;"
-            onclick="closeModal('modal-sukses'); stopScan();">OK, Terima Kasih</button>
-  </div>
-</div>
+    <div class="overlay" id="modal-sukses">
+        <div class="modal" style="text-align:center;">
+            <div style="font-size:60px; margin-bottom:12px;">✅</div>
+            <div class="modal-title" style="justify-content:center;">Absen Berhasil!</div>
+            <div id="sukses-detail"
+                style="font-size:14px; color:var(--text-muted); margin-bottom:20px; line-height:1.8;"></div>
+            <button class="btn btn-green" style="width:100%;" onclick="closeModal('modal-sukses'); stopScan();">OK,
+                Terima Kasih</button>
+        </div>
+    </div>
 
 
-<!-- TOAST -->
-<div class="toast" id="toast"></div>
+    <!-- TOAST -->
+    <div class="toast" id="toast"></div>
 
 
-<!-- ═══════════════════════════════════════════════
+    <!-- ═══════════════════════════════════════════════
      JAVASCRIPT
 ═══════════════════════════════════════════════ -->
-<script>
-// ── CONFIG ──
-const SB_URL  = 'https://zfhzddyoevblhvnjfiru.supabase.co';
-const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpmaHpkZHlvZXZibGh2bmpmaXJ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MjQwMTQsImV4cCI6MjA5NDEwMDAxNH0.BlydRfkkMRuO8L9pGQxFgkJHpvJO8ttgCqDXInkrnvY';
-const M_PASS  = 'bismillah';
-const G_PASS  = 'alhamdulilah';
+    <script>
+        // ── CONFIG ──
+        const SB_URL = 'https://zfhzddyoevblhvnjfiru.supabase.co';
+        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpmaHpkZHlvZXZibGh2bmpmaXJ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MjQwMTQsImV4cCI6MjA5NDEwMDAxNH0.BlydRfkkMRuO8L9pGQxFgkJHpvJO8ttgCqDXInkrnvY';
+        const M_PASS = 'bismillah';
+        const G_PASS = 'alhamdulilah';
 
-let sb, me = null, scanTimer = null, camStream = null, editId = null;
+        let sb, me = null, scanTimer = null, camStream = null, editId = null;
 
-// ── INIT ──
-window.addEventListener('load', () => {
-  sb = window.supabase.createClient(SB_URL, SB_KEY);
-  tick();
-  setInterval(tick, 1000);
-  document.getElementById('filter-tgl').value = today();
-});
+        // ── VARIABLE LOADING ISLAMI ──
+        const loaderHTML = `
+            <div class="islamic-loader">
+                <div class="loader-ikon">🕌</div>
+                <div class="loader-teks">Sedang mengambil data...</div>
+                <div class="loader-arab">إِنَّ اللَّهَ مَعَ الصَّابِرِينَ</div>
+                <div class="loader-arti">"Sesungguhnya Allah beserta orang-orang yang sabar" (Al-Baqarah: 153)</div>
+            </div>
+        `;
 
-function tick() {
-  const n = new Date();
-  const el = document.getElementById('live-clock');
-  const ds = document.getElementById('today-str');
-  if (el) el.textContent = n.toLocaleTimeString('id-ID');
-  if (ds) ds.textContent = n.toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
-}
+        // ── INIT ──
+        window.addEventListener('load', () => {
+            sb = window.supabase.createClient(SB_URL, SB_KEY);
+            tick();
+            setInterval(tick, 1000);
+            document.getElementById('filter-tgl').value = today();
+        });
 
-// ── HELPERS ──
-function today() { return new Date().toISOString().split('T')[0]; }
+        function tick() {
+            const n = new Date();
+            const el = document.getElementById('live-clock');
+            const ds = document.getElementById('today-str');
+            if (el) el.textContent = n.toLocaleTimeString('id-ID');
+            if (ds) ds.textContent = n.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+        }
 
-function fmtTime(iso) {
-  if (!iso) return '–';
-  return new Date(iso).toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
-}
+        // ── HELPERS ──
+        function today() { return new Date().toISOString().split('T')[0]; }
 
-function toast(msg, type = '') {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = `toast ${type} show`;
-  setTimeout(() => t.classList.remove('show'), 3200);
-}
+        function fmtTime(iso) {
+            if (!iso) return '–';
+            return new Date(iso).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
 
-function openModal(id)  { document.getElementById(id).classList.add('show'); }
-function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+        function toast(msg, type = '') {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = `toast ${type} show`;
+            setTimeout(() => t.classList.remove('show'), 3200);
+        }
 
-document.querySelectorAll('.overlay').forEach(o =>
-  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); })
-);
+        function openModal(id) { document.getElementById(id).classList.add('show'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 
-// ── ROLE PICKER ──
-let role = 'manajemen';
+        document.querySelectorAll('.overlay').forEach(o =>
+            o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); })
+        );
 
-function pickRole(r) {
-  role = r;
-  document.getElementById('rbtn-manajemen').classList.toggle('active', r === 'manajemen');
-  document.getElementById('rbtn-guru').classList.toggle('active',      r === 'guru');
-  document.getElementById('frm-manajemen').style.display = r === 'manajemen' ? 'block' : 'none';
-  document.getElementById('frm-guru').style.display      = r === 'guru'      ? 'block' : 'none';
-  document.getElementById('login-err').classList.remove('show');
-}
+        // ── ROLE PICKER ──
+        let role = 'manajemen';
 
-// ── LOGIN ──
-async function doLogin() {
-  const btn = document.getElementById('btn-login');
-  const err = document.getElementById('login-err');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spin"></span> Memverifikasi…';
-  err.classList.remove('show');
+        function pickRole(r) {
+            role = r;
+            document.getElementById('rbtn-manajemen').classList.toggle('active', r === 'manajemen');
+            document.getElementById('rbtn-guru').classList.toggle('active', r === 'guru');
+            document.getElementById('frm-manajemen').style.display = r === 'manajemen' ? 'block' : 'none';
+            document.getElementById('frm-guru').style.display = r === 'guru' ? 'block' : 'none';
+            document.getElementById('login-err').classList.remove('show');
+        }
 
-  try {
-    if (role === 'manajemen') {
-      if (document.getElementById('inp-m-pass').value !== M_PASS)
-        throw new Error('Password salah');
-      me = { role: 'manajemen', name: 'Administrator' };
-      showPage('manajemen');
-      initMgmt();
+        // ── LOGIN ──
+        async function doLogin() {
+            const btn = document.getElementById('btn-login');
+            const err = document.getElementById('login-err');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spin"></span> Memverifikasi…';
+            err.classList.remove('show');
 
-    } else {
-      const gid  = document.getElementById('inp-g-id').value.trim().toUpperCase();
-      const pass = document.getElementById('inp-g-pass').value;
-      if (!gid)       throw new Error('ID Guru tidak boleh kosong');
-      if (pass !== G_PASS) throw new Error('Password salah');
+            try {
+                if (role === 'manajemen') {
+                    if (document.getElementById('inp-m-pass').value !== M_PASS)
+                        throw new Error('Password salah');
+                    me = { role: 'manajemen', name: 'Administrator' };
+                    showPage('manajemen');
+                    initMgmt();
 
-      const { data, error } = await sb
-        .from('teachers')
-        .select('*')
-        .eq('teacher_id', gid)
-        .eq('is_active', true)
-        .single();
+                } else {
+                    const gid = document.getElementById('inp-g-id').value.trim().toUpperCase();
+                    const pass = document.getElementById('inp-g-pass').value;
+                    if (!gid) throw new Error('ID Guru tidak boleh kosong');
 
-      if (error || !data) throw new Error('ID Guru tidak ditemukan atau tidak aktif');
+                    // Ambil data guru dari Supabase
+                    const { data, error } = await sb
+                        .from('teachers')
+                        .select('*')
+                        .eq('teacher_id', gid)
+                        .eq('is_active', true)
+                        .single();
 
-      me = { role: 'guru', teacher_id: data.teacher_id, name: data.name, subject: data.subject || '' };
-      showPage('guru');
-      initGuru();
-    }
-  } catch (e) {
-    err.textContent = e.message;
-    err.classList.add('show');
-  }
+                    if (error || !data) throw new Error('ID Guru tidak ditemukan atau tidak aktif');
 
-  btn.disabled = false;
-  btn.innerHTML = 'Masuk →';
-}
+                    // Cek password (jika di DB kosong, gunakan default G_PASS)
+                    const dbPassword = data.password || G_PASS;
+                    if (pass !== dbPassword) throw new Error('Password salah');
 
-// ── LOGOUT ──
-function doLogout() {
-  stopScan();
-  me = null;
-  document.getElementById('inp-m-pass').value = '';
-  document.getElementById('inp-g-id').value   = '';
-  document.getElementById('inp-g-pass').value = '';
-  showPage('login');
-}
+                    me = {
+                        role: 'guru',
+                        teacher_id: data.teacher_id,
+                        name: data.name,
+                        subject: data.subject || '',
+                        password: dbPassword
+                    };
+                    showPage('guru');
+                    initGuru();
+                }
+            } catch (e) {
+                err.textContent = e.message;
+                err.classList.add('show');
+            }
 
-// ── PAGE SWITCH ──
-function showPage(name) {
-  document.querySelectorAll('.page').forEach(p => {
-    p.classList.remove('active');
-    p.style.display = 'none';
-  });
-  const pg = document.getElementById('page-' + name);
-  if (pg) {
-    pg.style.display = name === 'login' ? 'flex' : 'block';
-    pg.classList.add('active');
-  }
-}
+            btn.disabled = false;
+            btn.innerHTML = 'Masuk →';
+        }
 
-// ── TAB SWITCH ──
-function mTab(name, btn) {
-  document.querySelectorAll('#m-tab-nav .tab-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  document.querySelectorAll('[id^="m-pane-"]').forEach(p => p.classList.remove('active'));
-  document.getElementById('m-pane-' + name).classList.add('active');
-  if (name === 'laporan') loadReport();
-  if (name === 'qr')      loadQR();
-  if (name === 'guru')    loadTeachers();
-}
+        // ── LOGOUT ──
+        function doLogout() {
+            stopScan();
+            me = null;
+            document.getElementById('inp-m-pass').value = '';
+            document.getElementById('inp-g-id').value = '';
+            document.getElementById('inp-g-pass').value = '';
+            showPage('login');
+        }
 
-function gTab(name, btn) {
-  document.querySelectorAll('#page-guru .tab-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  document.querySelectorAll('[id^="g-pane-"]').forEach(p => p.classList.remove('active'));
-  document.getElementById('g-pane-' + name).classList.add('active');
-  if (name === 'riwayat') loadHistory();
-}
+        // ── PAGE SWITCH ──
+        function showPage(name) {
+            document.querySelectorAll('.page').forEach(p => {
+                p.classList.remove('active');
+                p.style.display = 'none';
+            });
+            const pg = document.getElementById('page-' + name);
+            if (pg) {
+                pg.style.display = name === 'login' ? 'flex' : 'block';
+                pg.classList.add('active');
+            }
+        }
 
-// ══════════════════════════════════════════════
-//  MANAJEMEN
-// ══════════════════════════════════════════════
-async function initMgmt() {
-  await Promise.all([loadTeachers(), loadDashStats(), loadTodayAtt(), loadQR()]);
-}
+        // ── TAB SWITCH ──
+        function mTab(name, btn) {
+            document.querySelectorAll('#m-tab-nav .tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('[id^="m-pane-"]').forEach(p => p.classList.remove('active'));
+            document.getElementById('m-pane-' + name).classList.add('active');
+            if (name === 'laporan') loadReport();
+            if (name === 'qr') loadQR();
+            if (name === 'guru') loadTeachers();
+        }
 
-// — Stats —
-async function loadDashStats() {
-  const d = today();
-  try {
-    const [tR, hR, bR, qR] = await Promise.all([
-      sb.from('teachers').select('id', { count:'exact', head:true }).eq('is_active', true),
-      sb.from('attendance').select('id', { count:'exact', head:true }).eq('date', d),
-      sb.from('attendance').select('id', { count:'exact', head:true }).gte('date', d.slice(0,7) + '-01'),
-      sb.from('qr_tokens').select('id').eq('valid_date', d).eq('is_active', true).limit(1)
-    ]);
-    document.getElementById('s-guru').textContent  = tR.count ?? '–';
-    document.getElementById('s-hadir').textContent = hR.count ?? '–';
-    document.getElementById('s-bulan').textContent = bR.count ?? '–';
-    document.getElementById('s-qr').textContent    = (qR.data && qR.data.length) ? '✅' : '❌';
-  } catch(e) { console.error(e); }
-}
+        function gTab(name, btn) {
+            document.querySelectorAll('#page-guru .tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('[id^="g-pane-"]').forEach(p => p.classList.remove('active'));
+            document.getElementById('g-pane-' + name).classList.add('active');
+            if (name === 'riwayat') loadHistory();
+        }
 
-// — Today Attendance list —
-async function loadTodayAtt() {
-  const el = document.getElementById('list-today-att');
-  try {
-    const { data, error } = await sb
-      .from('attendance')
-      .select('*, teachers(name, subject)')
-      .eq('date', today())
-      .order('check_in', { ascending: false });
+        // ══════════════════════════════════════════════
+        //  MANAJEMEN
+        // ══════════════════════════════════════════════
+        async function initMgmt() {
+            await Promise.all([loadTeachers(), loadDashStats(), loadTodayAtt(), loadQR()]);
+        }
 
-    if (error) throw error;
-    if (!data || !data.length) {
-      el.innerHTML = '<div class="empty"><div class="empty-ico">📋</div>Belum ada kehadiran hari ini</div>';
-      return;
-    }
-    el.innerHTML = data.map(a => `
+        // — Stats —
+        async function loadDashStats() {
+            const d = today();
+            try {
+                const [tR, hR, bR, qR] = await Promise.all([
+                    sb.from('teachers').select('id', { count: 'exact', head: true }).eq('is_active', true),
+                    sb.from('attendance').select('id', { count: 'exact', head: true }).eq('date', d),
+                    sb.from('attendance').select('id', { count: 'exact', head: true }).gte('date', d.slice(0, 7) + '-01'),
+                    sb.from('qr_tokens').select('id').eq('valid_date', d).eq('is_active', true).limit(1)
+                ]);
+                document.getElementById('s-guru').textContent = tR.count ?? '–';
+                document.getElementById('s-hadir').textContent = hR.count ?? '–';
+                document.getElementById('s-bulan').textContent = bR.count ?? '–';
+                document.getElementById('s-qr').textContent = (qR.data && qR.data.length) ? '✅' : '❌';
+            } catch (e) { console.error(e); }
+        }
+
+        // — Today Attendance list (ANIMATED) —
+        async function loadTodayAtt() {
+            const el = document.getElementById('list-today-att');
+            el.innerHTML = loaderHTML; // Tampilkan loading
+            try {
+                const { data, error } = await sb
+                    .from('attendance')
+                    .select('*, teachers(name, subject)')
+                    .eq('date', today())
+                    .order('check_in', { ascending: false });
+
+                if (error) throw error;
+                if (!data || !data.length) {
+                    el.innerHTML = '<div class="empty"><div class="empty-ico">📋</div>Belum ada kehadiran hari ini</div>';
+                    return;
+                }
+                el.innerHTML = data.map(a => `
       <div class="att-item">
         <div>
           <div class="att-name">${a.teachers?.name || a.teacher_id}</div>
@@ -1016,20 +1491,21 @@ async function loadTodayAtt() {
         </div>
         <span class="badge b-green">✓ Hadir</span>
       </div>`).join('');
-  } catch(e) { el.innerHTML = `<div style="color:red;padding:12px">Error: ${e.message}</div>`; }
-}
+            } catch (e) { el.innerHTML = `<div style="color:red;padding:12px">Error: ${e.message}</div>`; }
+        }
 
-// — Teacher Table —
-async function loadTeachers() {
-  const tb = document.getElementById('tbody-guru');
-  try {
-    const { data, error } = await sb.from('teachers').select('*').order('created_at', { ascending: false });
-    if (error) throw error;
-    if (!data || !data.length) {
-      tb.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#9ca3af;">Belum ada guru terdaftar</td></tr>';
-      return;
-    }
-    tb.innerHTML = data.map(t => `
+        // — Teacher Table (ANIMATED) —
+        async function loadTeachers() {
+            const tb = document.getElementById('tbody-guru');
+            tb.innerHTML = `<tr><td colspan="5">${loaderHTML}</td></tr>`; // Tampilkan loading
+            try {
+                const { data, error } = await sb.from('teachers').select('*').order('created_at', { ascending: false });
+                if (error) throw error;
+                if (!data || !data.length) {
+                    tb.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#9ca3af;">Belum ada guru terdaftar</td></tr>';
+                    return;
+                }
+                tb.innerHTML = data.map(t => `
       <tr>
         <td><code style="background:#f3f4f6;padding:2px 7px;border-radius:4px;font-size:13px;">${t.teacher_id}</code></td>
         <td><strong>${t.name}</strong></td>
@@ -1037,133 +1513,133 @@ async function loadTeachers() {
         <td><span class="badge ${t.is_active ? 'b-green' : 'b-red'}">${t.is_active ? 'Aktif' : 'Nonaktif'}</span></td>
         <td style="white-space:nowrap;">
           <button class="btn btn-sm" style="background:#e0f2fe;color:#0369a1;margin-right:4px;"
-                  onclick="openEditTeacher('${t.teacher_id}','${t.name}','${t.subject||''}')">✏️</button>
+                  onclick="openEditTeacher('${t.teacher_id}','${t.name}','${t.subject || ''}')">✏️</button>
           <button class="btn btn-sm btn-red"
                   onclick="deactivateTeacher('${t.teacher_id}','${t.name}')">🗑️</button>
         </td>
       </tr>`).join('');
-  } catch(e) { tb.innerHTML = `<tr><td colspan="5" style="color:red;padding:12px;">Error: ${e.message}</td></tr>`; }
-}
+            } catch (e) { tb.innerHTML = `<tr><td colspan="5" style="color:red;padding:12px;">Error: ${e.message}</td></tr>`; }
+        }
 
-// — Add / Edit Teacher —
-function openAddTeacher() {
-  editId = null;
-  document.getElementById('modal-guru-title').textContent = '➕ Tambah Guru Baru';
-  document.getElementById('inp-tid').value = '';
-  document.getElementById('inp-tid').disabled = false;
-  document.getElementById('inp-tname').value = '';
-  document.getElementById('inp-tsubject').value = '';
-  openModal('modal-guru');
-}
+        // — Add / Edit Teacher —
+        function openAddTeacher() {
+            editId = null;
+            document.getElementById('modal-guru-title').textContent = '➕ Tambah Guru Baru';
+            document.getElementById('inp-tid').value = '';
+            document.getElementById('inp-tid').disabled = false;
+            document.getElementById('inp-tname').value = '';
+            document.getElementById('inp-tsubject').value = '';
+            openModal('modal-guru');
+        }
 
-function openEditTeacher(id, name, subject) {
-  editId = id;
-  document.getElementById('modal-guru-title').textContent = '✏️ Edit Data Guru';
-  document.getElementById('inp-tid').value = id;
-  document.getElementById('inp-tid').disabled = true;
-  document.getElementById('inp-tname').value = name;
-  document.getElementById('inp-tsubject').value = subject;
-  openModal('modal-guru');
-}
+        function openEditTeacher(id, name, subject) {
+            editId = id;
+            document.getElementById('modal-guru-title').textContent = '✏️ Edit Data Guru';
+            document.getElementById('inp-tid').value = id;
+            document.getElementById('inp-tid').disabled = true;
+            document.getElementById('inp-tname').value = name;
+            document.getElementById('inp-tsubject').value = subject;
+            openModal('modal-guru');
+        }
 
-async function saveTeacher() {
-  const id      = document.getElementById('inp-tid').value.trim().toUpperCase();
-  const name    = document.getElementById('inp-tname').value.trim();
-  const subject = document.getElementById('inp-tsubject').value.trim();
+        async function saveTeacher() {
+            const id = document.getElementById('inp-tid').value.trim().toUpperCase();
+            const name = document.getElementById('inp-tname').value.trim();
+            const subject = document.getElementById('inp-tsubject').value.trim();
 
-  if (!id || !name) { toast('ID dan Nama wajib diisi', 'err'); return; }
+            if (!id || !name) { toast('ID dan Nama wajib diisi', 'err'); return; }
 
-  try {
-    if (editId) {
-      const { error } = await sb.from('teachers').update({ name, subject }).eq('teacher_id', editId);
-      if (error) throw error;
-      toast('Data guru berhasil diperbarui!', 'ok');
-    } else {
-      const { error } = await sb.from('teachers').insert([{ teacher_id: id, name, subject, is_active: true }]);
-      if (error) {
-        if (error.code === '23505') throw new Error('ID Guru sudah digunakan');
-        throw error;
-      }
-      toast('Guru berhasil ditambahkan!', 'ok');
-    }
-    closeModal('modal-guru');
-    await Promise.all([loadTeachers(), loadDashStats()]);
-  } catch(e) { toast(e.message, 'err'); }
-}
+            try {
+                if (editId) {
+                    const { error } = await sb.from('teachers').update({ name, subject }).eq('teacher_id', editId);
+                    if (error) throw error;
+                    toast('Data guru berhasil diperbarui!', 'ok');
+                } else {
+                    const { error } = await sb.from('teachers').insert([{ teacher_id: id, name, subject, is_active: true }]);
+                    if (error) {
+                        if (error.code === '23505') throw new Error('ID Guru sudah digunakan');
+                        throw error;
+                    }
+                    toast('Guru berhasil ditambahkan!', 'ok');
+                }
+                closeModal('modal-guru');
+                await Promise.all([loadTeachers(), loadDashStats()]);
+            } catch (e) { toast(e.message, 'err'); }
+        }
 
-async function deactivateTeacher(id, name) {
-  if (!confirm(`Nonaktifkan guru "${name}"?`)) return;
-  try {
-    const { error } = await sb.from('teachers').update({ is_active: false }).eq('teacher_id', id);
-    if (error) throw error;
-    toast('Guru dinonaktifkan', 'ok');
-    await Promise.all([loadTeachers(), loadDashStats()]);
-  } catch(e) { toast(e.message, 'err'); }
-}
+        async function deactivateTeacher(id, name) {
+            if (!confirm(`Nonaktifkan guru "${name}"?`)) return;
+            try {
+                const { error } = await sb.from('teachers').update({ is_active: false }).eq('teacher_id', id);
+                if (error) throw error;
+                toast('Guru dinonaktifkan', 'ok');
+                await Promise.all([loadTeachers(), loadDashStats()]);
+            } catch (e) { toast(e.message, 'err'); }
+        }
 
-// — QR Code —
-async function loadQR() {
-  const d   = today();
-  const msg = document.getElementById('qr-status-msg');
-  const inf = document.getElementById('qr-info');
-  const dp  = document.getElementById('qr-display');
+        // — QR Code —
+        async function loadQR() {
+            const d = today();
+            const msg = document.getElementById('qr-status-msg');
+            const inf = document.getElementById('qr-info');
+            const dp = document.getElementById('qr-display');
 
-  try {
-    const { data } = await sb.from('qr_tokens').select('*')
-      .eq('valid_date', d).eq('is_active', true).single();
+            try {
+                const { data } = await sb.from('qr_tokens').select('*')
+                    .eq('valid_date', d).eq('is_active', true).single();
 
-    if (data) {
-      msg.innerHTML = `<div style="background:#dcfce7;border:1px solid #86efac;border-radius:8px;padding:10px 14px;font-size:13px;color:#15803d;">
+                if (data) {
+                    msg.innerHTML = `<div style="background:#dcfce7;border:1px solid #86efac;border-radius:8px;padding:10px 14px;font-size:13px;color:#15803d;">
         ✅ QR aktif untuk hari ini (${d})</div>`;
-      renderQR(data.token, dp);
-      inf.innerHTML = `<div style="font-family:monospace;background:#f3f4f6;padding:3px 8px;border-radius:4px;font-size:12px;">${data.token}</div>
+                    renderQR(data.token, dp);
+                    inf.innerHTML = `<div style="font-family:monospace;background:#f3f4f6;padding:3px 8px;border-radius:4px;font-size:12px;">${data.token}</div>
         <div style="margin-top:4px;font-size:11px;">Berlaku: ${d}</div>`;
-    } else {
-      msg.innerHTML = `<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px 14px;font-size:13px;color:#92400e;">
+                } else {
+                    msg.innerHTML = `<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px 14px;font-size:13px;color:#92400e;">
         ⚠️ Belum ada QR hari ini. Klik "Generate QR Baru".</div>`;
-      dp.innerHTML = `<div style="text-align:center;color:#9ca3af;font-size:13px;padding:20px;">QR belum digenerate</div>`;
-      inf.innerHTML = '';
-    }
-  } catch(e) { console.error(e); }
-}
+                    dp.innerHTML = `<div style="text-align:center;color:#9ca3af;font-size:13px;padding:20px;">QR belum digenerate</div>`;
+                    inf.innerHTML = '';
+                }
+            } catch (e) { console.error(e); }
+        }
 
-function renderQR(token, container) {
-  container.innerHTML = '';
-  const payload = JSON.stringify({ app:'al-khidmat-digital', date: today(), token });
-  new QRCode(container, {
-    text: payload,
-    width: 220, height: 220,
-    colorDark: '#0b3320', colorLight: '#ffffff',
-    correctLevel: QRCode.CorrectLevel.H
-  });
-}
+        function renderQR(token, container) {
+            container.innerHTML = '';
+            const payload = JSON.stringify({ app: 'al-khidmat-digital', date: today(), token });
+            new QRCode(container, {
+                text: payload,
+                width: 220, height: 220,
+                colorDark: '#0b3320', colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
 
-async function generateQR() {
-  try {
-    await sb.from('qr_tokens').update({ is_active: false }).eq('valid_date', today());
+        async function generateQR() {
+            try {
+                await sb.from('qr_tokens').update({ is_active: false }).eq('valid_date', today());
 
-    const token = 'AKD-' + Date.now().toString(36).toUpperCase() +
-                  '-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+                const token = 'AKD-' + Date.now().toString(36).toUpperCase() +
+                    '-' + Math.random().toString(36).substr(2, 6).toUpperCase();
 
-    const { error } = await sb.from('qr_tokens').insert([{
-      token, valid_date: today(), is_active: true
-    }]);
-    if (error) throw error;
+                const { error } = await sb.from('qr_tokens').insert([{
+                    token, valid_date: today(), is_active: true
+                }]);
+                if (error) throw error;
 
-    toast('QR baru berhasil dibuat!', 'ok');
-    await Promise.all([loadQR(), loadDashStats()]);
-  } catch(e) { toast('Gagal: ' + e.message, 'err'); }
-}
+                toast('QR baru berhasil dibuat!', 'ok');
+                await Promise.all([loadQR(), loadDashStats()]);
+            } catch (e) { toast('Gagal: ' + e.message, 'err'); }
+        }
 
-function printQR() {
-  const canvas = document.querySelector('#qr-display canvas');
-  if (!canvas) { toast('Generate QR terlebih dahulu', 'err'); return; }
+        function printQR() {
+            const canvas = document.querySelector('#qr-display canvas');
+            if (!canvas) { toast('Generate QR terlebih dahulu', 'err'); return; }
 
-  const tgl = new Date().toLocaleDateString('id-ID',
-    { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+            const tgl = new Date().toLocaleDateString('id-ID',
+                { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
-  const win = window.open('', '_blank');
-  win.document.write(`<!DOCTYPE html><html><head><title>QR Absen Al-Khidmat</title>
+            const win = window.open('', '_blank');
+            win.document.write(`<!DOCTYPE html><html><head><title>QR Absen Al-Khidmat</title>
     <style>
       body{font-family:Arial,sans-serif;text-align:center;padding:50px;background:#fff;}
       h1{color:#0b3320;font-size:22px;} h2{color:#1a5c38;font-size:15px;margin-top:4px;}
@@ -1177,28 +1653,28 @@ function printQR() {
     <p><strong>Scan QR ini untuk absensi masuk</strong></p>
     <script>setTimeout(()=>window.print(),600);<\/script>
     </body></html>`);
-}
+        }
 
-// — Report —
-async function loadReport() {
-  const d    = document.getElementById('filter-tgl').value;
-  const wrap = document.getElementById('report-wrap');
-  if (!d) return;
+        // — Report (ANIMATED) —
+        async function loadReport() {
+            const d = document.getElementById('filter-tgl').value;
+            const wrap = document.getElementById('report-wrap');
+            if (!d) return;
 
-  wrap.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">Memuat…</div>';
+            wrap.innerHTML = loaderHTML; // Tampilkan loading
 
-  try {
-    const { data, error } = await sb.from('attendance')
-      .select('*, teachers(name, subject)')
-      .eq('date', d)
-      .order('check_in', { ascending: true });
+            try {
+                const { data, error } = await sb.from('attendance')
+                    .select('*, teachers(name, subject)')
+                    .eq('date', d)
+                    .order('check_in', { ascending: true });
 
-    if (error) throw error;
-    if (!data || !data.length) {
-      wrap.innerHTML = `<div class="empty"><div class="empty-ico">📅</div>Tidak ada kehadiran pada ${d}</div>`;
-      return;
-    }
-    wrap.innerHTML = `
+                if (error) throw error;
+                if (!data || !data.length) {
+                    wrap.innerHTML = `<div class="empty"><div class="empty-ico">📅</div>Tidak ada kehadiran pada ${d}</div>`;
+                    return;
+                }
+                wrap.innerHTML = `
       <div style="margin-bottom:8px;font-size:13px;color:var(--text-muted);">
         Total kehadiran: <strong>${data.length}</strong>
       </div>
@@ -1217,179 +1693,226 @@ async function loadReport() {
           </tbody>
         </table>
       </div>`;
-  } catch(e) { wrap.innerHTML = `<div style="color:red;padding:12px;">Error: ${e.message}</div>`; }
-}
+            } catch (e) { wrap.innerHTML = `<div style="color:red;padding:12px;">Error: ${e.message}</div>`; }
+        }
 
-// ══════════════════════════════════════════════
-//  GURU
-// ══════════════════════════════════════════════
-async function initGuru() {
-  document.getElementById('g-display-name').textContent = me.name;
-  document.getElementById('g-display-id').textContent   = `ID: ${me.teacher_id}`;
-  await checkTodayStatus();
-}
+        // ══════════════════════════════════════════════
+        //  GURU
+        // ══════════════════════════════════════════════
+        async function initGuru() {
+            document.getElementById('g-display-name').textContent = me.name;
+            document.getElementById('g-display-id').textContent = `ID: ${me.teacher_id}`;
 
-async function checkTodayStatus() {
-  const card = document.getElementById('today-status-card');
-  try {
-    const { data } = await sb.from('attendance')
-      .select('*')
-      .eq('teacher_id', me.teacher_id)
-      .eq('date', today())
-      .single();
+            // Set data ke halaman profil
+            const elId = document.getElementById('prof-g-id');
+            const elName = document.getElementById('prof-g-name');
+            const elPass = document.getElementById('prof-g-pass');
 
-    if (data) {
-      card.className = 'today-card hadir';
-      card.innerHTML = `
+            if (elId) elId.value = me.teacher_id;
+            if (elName) elName.value = me.name;
+            if (elPass) elPass.value = me.password;
+
+            await checkTodayStatus();
+        }
+
+        async function checkTodayStatus() {
+            const card = document.getElementById('today-status-card');
+            try {
+                const { data } = await sb.from('attendance')
+                    .select('*')
+                    .eq('teacher_id', me.teacher_id)
+                    .eq('date', today())
+                    .single();
+
+                if (data) {
+                    card.className = 'today-card hadir';
+                    card.innerHTML = `
         <div class="tc-ico">✅</div>
         <div class="tc-title">Sudah Absen Hari Ini</div>
         <div class="tc-sub">Jam masuk: ${fmtTime(data.check_in)}</div>`;
-    } else {
-      card.className = 'today-card belum';
-      card.innerHTML = `
+                } else {
+                    card.className = 'today-card belum';
+                    card.innerHTML = `
         <div class="tc-ico">⏳</div>
         <div class="tc-title">Belum Absen Hari Ini</div>
         <div class="tc-sub">Scan QR di sekolah untuk absen masuk</div>`;
-    }
-  } catch(e) { console.error(e); }
-}
+                }
+            } catch (e) { console.error(e); }
+        }
 
-// — Scanner —
-async function startScan() {
-  const ph  = document.getElementById('scan-placeholder');
-  const act = document.getElementById('scan-active');
-  const vid = document.getElementById('camera-view');
+        // — Scanner —
+        async function startScan() {
+            const ph = document.getElementById('scan-placeholder');
+            const act = document.getElementById('scan-active');
+            const vid = document.getElementById('camera-view');
 
-  try {
-    camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-    vid.srcObject = camStream;
-    ph.style.display  = 'none';
-    act.style.display = 'block';
+            try {
+                camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                vid.srcObject = camStream;
+                ph.style.display = 'none';
+                act.style.display = 'block';
 
-    const canvas = document.getElementById('scan-canvas');
-    const ctx    = canvas.getContext('2d');
+                const canvas = document.getElementById('scan-canvas');
+                const ctx = canvas.getContext('2d');
 
-    scanTimer = setInterval(() => {
-      if (vid.readyState !== vid.HAVE_ENOUGH_DATA) return;
-      canvas.width  = vid.videoWidth;
-      canvas.height = vid.videoHeight;
-      ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
-      const img  = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const code = jsQR(img.data, img.width, img.height);
-      if (code) {
-        clearInterval(scanTimer); scanTimer = null;
-        document.getElementById('scan-msg').textContent = '✅ QR Terdeteksi! Memvalidasi…';
-        processQR(code.data);
-      }
-    }, 200);
+                scanTimer = setInterval(() => {
+                    if (vid.readyState !== vid.HAVE_ENOUGH_DATA) return;
+                    canvas.width = vid.videoWidth;
+                    canvas.height = vid.videoHeight;
+                    ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
+                    const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const code = jsQR(img.data, img.width, img.height);
+                    if (code) {
+                        clearInterval(scanTimer); scanTimer = null;
+                        document.getElementById('scan-msg').textContent = '✅ QR Terdeteksi! Memvalidasi…';
+                        processQR(code.data);
+                    }
+                }, 200);
 
-  } catch(e) {
-    toast('Tidak dapat mengakses kamera: ' + e.message, 'err');
-  }
-}
+            } catch (e) {
+                toast('Tidak dapat mengakses kamera: ' + e.message, 'err');
+            }
+        }
 
-function stopScan() {
-  if (scanTimer)  { clearInterval(scanTimer); scanTimer = null; }
-  if (camStream)  { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
-  const act = document.getElementById('scan-active');
-  const ph  = document.getElementById('scan-placeholder');
-  if (act) act.style.display = 'none';
-  if (ph)  ph.style.display  = 'block';
-  const sm = document.getElementById('scan-msg');
-  if (sm) sm.textContent = 'Mendeteksi QR Code…';
-}
+        function stopScan() {
+            if (scanTimer) { clearInterval(scanTimer); scanTimer = null; }
+            if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
+            const act = document.getElementById('scan-active');
+            const ph = document.getElementById('scan-placeholder');
+            if (act) act.style.display = 'none';
+            if (ph) ph.style.display = 'block';
+            const sm = document.getElementById('scan-msg');
+            if (sm) sm.textContent = 'Mendeteksi QR Code…';
+        }
 
-async function processQR(raw) {
-  try {
-    let parsed;
-    try { parsed = JSON.parse(raw); } catch { throw new Error('Format QR tidak dikenali'); }
+        async function processQR(raw) {
+            try {
+                let parsed;
+                try { parsed = JSON.parse(raw); } catch { throw new Error('Format QR tidak dikenali'); }
 
-    if (parsed.app !== 'al-khidmat-digital') throw new Error('QR bukan dari Al-Khidmat Digital');
-    if (parsed.date !== today())              throw new Error('QR Code tidak berlaku untuk hari ini');
+                if (parsed.app !== 'al-khidmat-digital') throw new Error('QR bukan dari Al-Khidmat Digital');
+                if (parsed.date !== today()) throw new Error('QR Code tidak berlaku untuk hari ini');
 
-    // Validate token
-    const { data: qr, error: qErr } = await sb.from('qr_tokens').select('*')
-      .eq('token', parsed.token).eq('valid_date', today()).eq('is_active', true).single();
-    if (qErr || !qr) throw new Error('Token QR tidak valid atau sudah kadaluarsa');
+                // Validate token
+                const { data: qr, error: qErr } = await sb.from('qr_tokens').select('*')
+                    .eq('token', parsed.token).eq('valid_date', today()).eq('is_active', true).single();
+                if (qErr || !qr) throw new Error('Token QR tidak valid atau sudah kadaluarsa');
 
-    // Already attended?
-    const { data: ex } = await sb.from('attendance').select('*')
-      .eq('teacher_id', me.teacher_id).eq('date', today()).single();
+                // Already attended?
+                const { data: ex } = await sb.from('attendance').select('*')
+                    .eq('teacher_id', me.teacher_id).eq('date', today()).single();
 
-    if (ex) {
-      toast(`✅ Anda sudah absen pukul ${fmtTime(ex.check_in)}`, 'ok');
-      stopScan();
-      return;
-    }
+                if (ex) {
+                    toast(`✅ Anda sudah absen pukul ${fmtTime(ex.check_in)}`, 'ok');
+                    stopScan();
+                    return;
+                }
 
-    // Insert attendance
-    const { error: insErr } = await sb.from('attendance').insert([{
-      teacher_id: me.teacher_id,
-      date: today(),
-      check_in: new Date().toISOString(),
-      status: 'hadir'
-    }]);
-    if (insErr) throw insErr;
+                // Insert attendance
+                const { error: insErr } = await sb.from('attendance').insert([{
+                    teacher_id: me.teacher_id,
+                    date: today(),
+                    check_in: new Date().toISOString(),
+                    status: 'hadir'
+                }]);
+                if (insErr) throw insErr;
 
-    // Success modal
-    document.getElementById('sukses-detail').innerHTML =
-      `<strong>${me.name}</strong><br>
+                // Success modal
+                document.getElementById('sukses-detail').innerHTML =
+                    `<strong>${me.name}</strong><br>
        berhasil absen masuk<br>
        🕐 ${new Date().toLocaleTimeString('id-ID')}<br>
-       📅 ${new Date().toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long', year:'numeric' })}`;
-    openModal('modal-sukses');
-    await checkTodayStatus();
+       📅 ${new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}`;
+                openModal('modal-sukses');
+                await checkTodayStatus();
 
-  } catch(e) {
-    toast('⚠️ ' + e.message, 'err');
-    // Re-start scanner after short delay
-    setTimeout(() => {
-      if (camStream) {
-        const vid = document.getElementById('camera-view');
-        const canvas = document.getElementById('scan-canvas');
-        const ctx = canvas.getContext('2d');
-        document.getElementById('scan-msg').textContent = 'Mendeteksi QR Code…';
-        scanTimer = setInterval(() => {
-          if (vid.readyState !== vid.HAVE_ENOUGH_DATA) return;
-          canvas.width = vid.videoWidth; canvas.height = vid.videoHeight;
-          ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
-          const img  = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          const code = jsQR(img.data, img.width, img.height);
-          if (code) { clearInterval(scanTimer); scanTimer = null; processQR(code.data); }
-        }, 200);
-      }
-    }, 2000);
-  }
-}
+            } catch (e) {
+                toast('⚠️ ' + e.message, 'err');
+                // Re-start scanner after short delay
+                setTimeout(() => {
+                    if (camStream) {
+                        const vid = document.getElementById('camera-view');
+                        const canvas = document.getElementById('scan-canvas');
+                        const ctx = canvas.getContext('2d');
+                        document.getElementById('scan-msg').textContent = 'Mendeteksi QR Code…';
+                        scanTimer = setInterval(() => {
+                            if (vid.readyState !== vid.HAVE_ENOUGH_DATA) return;
+                            canvas.width = vid.videoWidth; canvas.height = vid.videoHeight;
+                            ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
+                            const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                            const code = jsQR(img.data, img.width, img.height);
+                            if (code) { clearInterval(scanTimer); scanTimer = null; processQR(code.data); }
+                        }, 200);
+                    }
+                }, 2000);
+            }
+        }
 
-// — History —
-async function loadHistory() {
-  const el = document.getElementById('list-riwayat');
-  el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">Memuat…</div>';
-  try {
-    const { data, error } = await sb.from('attendance')
-      .select('*')
-      .eq('teacher_id', me.teacher_id)
-      .order('date', { ascending: false })
-      .limit(30);
+        // — History (ANIMATED) —
+        async function loadHistory() {
+            const el = document.getElementById('list-riwayat');
+            el.innerHTML = loaderHTML; // Tampilkan loading
+            try {
+                const { data, error } = await sb.from('attendance')
+                    .select('*')
+                    .eq('teacher_id', me.teacher_id)
+                    .order('date', { ascending: false })
+                    .limit(30);
 
-    if (error) throw error;
-    if (!data || !data.length) {
-      el.innerHTML = '<div class="empty"><div class="empty-ico">📅</div>Belum ada riwayat kehadiran</div>';
-      return;
-    }
-    el.innerHTML = data.map(a => `
+                if (error) throw error;
+                if (!data || !data.length) {
+                    el.innerHTML = '<div class="empty"><div class="empty-ico">📅</div>Belum ada riwayat kehadiran</div>';
+                    return;
+                }
+                el.innerHTML = data.map(a => `
       <div class="att-item">
         <div>
           <div class="att-name">📅 ${new Date(a.date + 'T00:00:00').toLocaleDateString('id-ID',
-            { weekday:'long', day:'numeric', month:'long', year:'numeric' })}</div>
+                    { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</div>
           <div class="att-sub">Jam masuk: ${fmtTime(a.check_in)}</div>
         </div>
         <span class="badge b-green">✓ Hadir</span>
       </div>`).join('');
-  } catch(e) { el.innerHTML = `<div style="color:red;padding:12px;">Error: ${e.message}</div>`; }
-}
-</script>
+            } catch (e) { el.innerHTML = `<div style="color:red;padding:12px;">Error: ${e.message}</div>`; }
+        }
 
+        // — Update Password —
+        async function updatePassword() {
+            const elPass = document.getElementById('prof-g-pass');
+            if (!elPass) return;
+            const newPass = elPass.value.trim();
+            const btn = document.querySelector('#g-pane-profil .btn-green');
+
+            if (!newPass) {
+                toast('Password tidak boleh kosong', 'err');
+                return;
+            }
+
+            if (btn) {
+                btn.innerHTML = '<span class="spin"></span> Menyimpan...';
+                btn.disabled = true;
+            }
+
+            try {
+                const { error } = await sb
+                    .from('teachers')
+                    .update({ password: newPass })
+                    .eq('teacher_id', me.teacher_id);
+
+                if (error) throw error;
+
+                toast('✅ Password berhasil diperbarui!', 'ok');
+                me.password = newPass; // Update memori sesi saat ini
+            } catch (e) {
+                toast('Gagal menyimpan: ' + e.message, 'err');
+            }
+
+            if (btn) {
+                btn.innerHTML = '💾 Simpan Password';
+                btn.disabled = false;
+            }
+        }
+    </script>
 </body>
+
 </html>
