@@ -2475,8 +2475,8 @@ ${a.status === 'terlambat'
                     throw new Error('QR Code belum berlaku');
 
                 // Ambil type dari QR (masuk / pulang)
-                const qrType = parsed.type || 'masuk';
-
+                // SESUDAH: baca dari payload QR dulu, kalau kosong ambil dari database
+                const qrType = parsed.type || qr.type || 'masuk';
                 // Already attended today?
                 const { data: ex } = await sb.from('attendance').select('*')
                     .eq('teacher_id', me.teacher_id).eq('date', today()).maybeSingle();
