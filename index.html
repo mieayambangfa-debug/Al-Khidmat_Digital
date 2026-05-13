@@ -2486,7 +2486,7 @@ ${a.status === 'terlambat'
 
                 // Ambil type dari QR (masuk / pulang)
                 // SESUDAH: baca dari payload QR dulu, kalau kosong ambil dari database
-                const qrType = parsed.type || qr.type || 'masuk';
+                const qrType = (parsed.type === 'pulang' || qr.type === 'pulang') ? 'pulang' : 'masuk';
                 // Already attended today?
                 const { data: ex } = await sb.from('attendance').select('*')
                     .eq('teacher_id', me.teacher_id).eq('date', today()).maybeSingle();
