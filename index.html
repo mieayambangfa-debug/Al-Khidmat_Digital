@@ -2398,17 +2398,27 @@ ${a.status === 'terlambat'
                     .single();
 
                 if (data) {
-                    card.className = 'today-card hadir';
-                    card.innerHTML = `
-        <div class="tc-ico">✅</div>
-        <div class="tc-title">Sudah Absen Hari Ini</div>
-        <div class="tc-sub">Jam masuk: ${fmtTime(data.check_in)}</div>`;
+                    if (data.check_out) {
+                        // Sudah scan masuk DAN pulang
+                        card.className = 'today-card hadir';
+                        card.innerHTML = `
+                    <div class="tc-ico">🏠</div>
+                    <div class="tc-title">Sudah Absen Masuk & Pulang</div>
+                    <div class="tc-sub">Masuk: ${fmtTime(data.check_in)} · Pulang: ${fmtTime(data.check_out)}</div>`;
+                    } else {
+                        // Sudah scan masuk, belum pulang
+                        card.className = 'today-card hadir';
+                        card.innerHTML = `
+                    <div class="tc-ico">✅</div>
+                    <div class="tc-title">Sudah Absen Masuk</div>
+                    <div class="tc-sub">Jam masuk: ${fmtTime(data.check_in)} · Belum scan pulang</div>`;
+                    }
                 } else {
                     card.className = 'today-card belum';
                     card.innerHTML = `
-        <div class="tc-ico">⏳</div>
-        <div class="tc-title">Belum Absen Hari Ini</div>
-        <div class="tc-sub">Scan QR di sekolah untuk absen masuk</div>`;
+                <div class="tc-ico">⏳</div>
+                <div class="tc-title">Belum Absen Hari Ini</div>
+                <div class="tc-sub">Scan QR di sekolah untuk absen masuk</div>`;
                 }
             } catch (e) { console.error(e); }
         }
