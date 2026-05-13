@@ -1207,22 +1207,7 @@
         <!-- SCAN TAB -->
         <div id="g-pane-scan" class="tab-pane active">
 
-            <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;
-                    padding:12px 14px;margin-bottom:14px;display:flex;gap:10px;align-items:flex-start;">
-                <span style="font-size:20px;line-height:1.2;">⚠️</span>
-                <div style="font-size:13px;color:#92400e;">
-                    <strong>Sakit atau Izin hari ini?</strong><br>
-                    Segera lapor ke pihak manajemen agar kehadiran Anda tidak tercatat sebagai <strong>Alpha</strong>.
-                    Guru yang tidak hadir tanpa keterangan akan otomatis tercatat alpha di laporan.
-                </div>
-            </div>
-
-            <div id="today-status-card" class="today-card belum">
-                <div class="tc-ico">⏳</div>
-                <div class="tc-title">Belum Absen Hari Ini</div>
-                <div class="tc-sub">Scan QR di sekolah untuk absen masuk</div>
-            </div>
-
+            <!-- KAMERA DI ATAS -->
             <div class="card">
                 <div class="card-head" style="justify-content:center;">📷 Scan QR Code Absensi</div>
                 <p style="text-align:center; font-size:13px; color:var(--text-muted); margin-bottom:16px;">
@@ -1253,6 +1238,25 @@
                     </div>
                 </div>
             </div>
+
+            <!-- STATUS HARI INI -->
+            <div id="today-status-card" class="today-card belum">
+                <div class="tc-ico">⏳</div>
+                <div class="tc-title">Belum Absen Hari Ini</div>
+                <div class="tc-sub">Scan QR di sekolah untuk absen masuk</div>
+            </div>
+
+            <!-- INFO IZIN/SAKIT -->
+            <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;
+            padding:12px 14px;margin-bottom:14px;display:flex;gap:10px;align-items:flex-start;">
+                <span style="font-size:20px;line-height:1.2;">⚠️</span>
+                <div style="font-size:13px;color:#92400e;">
+                    <strong>Sakit atau Izin hari ini?</strong><br>
+                    Segera lapor ke pihak manajemen agar kehadiran Anda tidak tercatat sebagai <strong>Alpha</strong>.
+                    Guru yang tidak hadir tanpa keterangan akan otomatis tercatat alpha di laporan.
+                </div>
+            </div>
+
         </div>
 
         <!-- RIWAYAT TAB -->
@@ -2597,7 +2601,7 @@ ${a.status === 'terlambat'
         <div>
           <div class="att-name">📅 ${new Date(a.date + 'T00:00:00').toLocaleDateString('id-ID',
                     { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</div>
-          <div class="att-sub">Jam masuk: ${fmtTime(a.check_in)}</div>
+          <div class="att-sub">Masuk: ${fmtTime(a.check_in)} · Pulang: ${a.check_out ? fmtTime(a.check_out) : '–'}</div>
         </div>
 ${a.status === 'terlambat'
                         ? '<span class="badge b-yellow">⏰ Terlambat</span>'
