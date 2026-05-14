@@ -1053,6 +1053,7 @@
         </div>
 
         <!-- QR CODE -->
+        <!-- QR CODE -->
         <div id="m-pane-qr" class="tab-pane">
 
             <!-- Generate QR Baru -->
@@ -1061,32 +1062,16 @@
                 <div class="form-group">
                     <label class="form-label">Nama / Label QR <span style="color:var(--danger)">*</span></label>
                     <input type="text" id="inp-qr-label" class="form-input"
-                        placeholder="Contoh: QR Harian, QR Event Wisuda, QR Permanen Sekolah">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Durasi Berlaku</label>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px;">
-                        <button class="role-btn active" id="dur-1" onclick="pickDur(1,this)">
-                            <span class="role-icon">📅</span>1 Hari
-                        </button>
-                        <button class="role-btn" id="dur-3" onclick="pickDur(3,this)">
-                            <span class="role-icon">📅</span>3 Hari
-                        </button>
-                        <button class="role-btn" id="dur-7" onclick="pickDur(7,this)">
-                            <span class="role-icon">📅</span>7 Hari
-                        </button>
-                        <button class="role-btn" id="dur-0" onclick="pickDur(0,this)">
-                            <span class="role-icon">♾️</span>Selamanya
-                        </button>
-                    </div>
+                        placeholder="Contoh: QR Sesi Pagi, QR Kajian Sabtu">
                 </div>
                 <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;
-                padding:12px 14px;margin-bottom:12px;font-size:13px;color:#166534;">
-                    📌 Sistem akan otomatis generate <strong>2 QR sekaligus</strong>:
-                    <strong>QR Masuk</strong> dan <strong>QR Pulang</strong> dengan label &amp; durasi yang sama.
+        padding:12px 14px;margin-bottom:12px;font-size:13px;color:#166534;">
+                    📌 Sistem generate <strong>2 QR sekaligus</strong>: <strong>QR Masuk</strong> &amp;
+                    <strong>QR Pulang</strong>. Keduanya <strong>tertutup</strong> sampai Manajemen membukanya.
+                    Saat QR Pulang dibuka, QR Masuk <strong>otomatis ditutup</strong>.
                 </div>
-                <button class="btn btn-green" style="width:100%;padding:12px;margin-top:4px;" onclick="generateQR()">
-                    🔄 Generate &amp; Simpan 2 QR (Masuk + Pulang)
+                <button class="btn btn-green" style="width:100%;padding:12px;" onclick="generateQR()">
+                    🔄 Generate 2 QR (Masuk + Pulang)
                 </button>
             </div>
 
@@ -1816,8 +1801,7 @@
                     sb.from('teachers').select('id', { count: 'exact', head: true }).eq('is_active', true),
                     sb.from('attendance').select('id', { count: 'exact', head: true }).eq('date', d),
                     sb.from('attendance').select('id', { count: 'exact', head: true }).gte('date', d.slice(0, 7) + '-01'),
-                    sb.from('qr_tokens').select('id').eq('valid_date', d).eq('is_active', true).limit(1)
-                ]);
+sb.from('qr_tokens').select('id').eq('is_open', true).eq('is_active', true).limit(1)                ]);
                 document.getElementById('s-guru').textContent = tR.count ?? '–';
                 document.getElementById('s-hadir').textContent = hR.count ?? '–';
                 document.getElementById('s-bulan').textContent = bR.count ?? '–';
@@ -1945,40 +1929,32 @@ ${a.status === 'terlambat'
         //  PERBAIKAN SECTION QR
         // ══════════════════════════════════════════════
 
-        let qrDuration = 1;
-
-        function pickDur(days, btn) {
-            qrDuration = days;
-            document.querySelectorAll('[id^="dur-"]').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-        }
 
         async function generateQR() {
             const label = document.getElementById('inp-qr-label').value.trim();
             if (!label) { toast('Nama QR tidak boleh kosong', 'err'); return; }
 
             const td = today();
-            let validUntil = null;
-            if (qrDuration > 0) {
-                const d = new Date(td + 'T00:00:00');
-                d.setDate(d.getDate() + qrDuration - 1);
-                validUntil = d.toISOString().split('T')[0];
-            }
-
             const makeToken = () => 'AKD-' + Date.now().toString(36).toUpperCase()
                 + '-' + Math.random().toString(36).substr(2, 6).toUpperCase();
 
             const tokenMasuk = makeToken();
-            await new Promise(r => setTimeout(r, 1));
+            await new Promise(r => setTimeout(r, 2));
             const tokenPulang = makeToken();
 
             try {
                 const { error } = await sb.from('qr_tokens').insert([
-                    { token: tokenMasuk, valid_date: td, valid_until: validUntil, label: label + ' – Masuk', type: 'masuk', is_active: true },
-                    { token: tokenPulang, valid_date: td, valid_until: validUntil, label: label + ' – Pulang', type: 'pulang', is_active: true }
+                    {
+                        token: tokenMasuk, valid_date: td, label: label + ' – Masuk',
+                        type: 'masuk', is_active: true, is_open: false
+                    },
+                    {
+                        token: tokenPulang, valid_date: td, label: label + ' – Pulang',
+                        type: 'pulang', is_active: true, is_open: false
+                    }
                 ]);
                 if (error) throw error;
-                toast('✅ 2 QR "' + label + '" (Masuk & Pulang) berhasil disimpan!', 'ok');
+                toast('✅ 2 QR "' + label + '" berhasil dibuat (status: Tertutup)', 'ok');
                 document.getElementById('inp-qr-label').value = '';
                 await Promise.all([loadQR(), loadDashStats()]);
             } catch (e) { toast('Gagal: ' + e.message, 'err'); }
@@ -1996,82 +1972,128 @@ ${a.status === 'terlambat'
                     .order('created_at', { ascending: false });
                 if (error) throw error;
                 if (!data || !data.length) {
-                    wrap.innerHTML = '<div class="empty"><div class="empty-ico">📷</div>Belum ada QR tersimpan. Generate QR baru di atas.</div>';
+                    wrap.innerHTML = '<div class="empty"><div class="empty-ico">📷</div>Belum ada QR tersimpan.</div>';
                     return;
                 }
 
-                const td = today();
-
-                // Kelompokkan per pasangan
+                // Kelompokkan per pasangan Masuk–Pulang
                 const groups = {};
                 data.forEach(q => {
                     const baseLabel = q.label.replace(/ [–-] (Masuk|Pulang)$/i, '').trim();
                     const key = q.valid_date + '||' + baseLabel;
-                    if (!groups[key]) groups[key] = { baseLabel, valid_date: q.valid_date, valid_until: q.valid_until, items: [] };
+                    if (!groups[key]) groups[key] = { baseLabel, valid_date: q.valid_date, items: [] };
                     groups[key].items.push(q);
                 });
 
-                // Simpan ke memory dengan key numerik
                 Object.keys(qrGroupData).forEach(k => delete qrGroupData[k]);
                 const groupArr = Object.values(groups);
                 groupArr.forEach((g, idx) => { qrGroupData[idx] = g; });
 
-                wrap.innerHTML = groupArr.map((g, idx) => {
-                    const expired = g.valid_until && g.valid_until < td;
-                    const durLabel = !g.valid_until
-                        ? '♾️ Selamanya'
-                        : g.valid_until === g.valid_date
-                            ? '📅 1 Hari'
-                            : '📅 s/d ' + g.valid_until;
+                const fmtTs = iso => iso
+                    ? new Date(iso).toLocaleString('id-ID', {
+                        day: '2-digit', month: 'short',
+                        hour: '2-digit', minute: '2-digit'
+                    })
+                    : '–';
 
-                    const masuk = g.items.find(i => (i.type || 'masuk') === 'masuk') || g.items[0];
-                    const pulang = g.items.find(i => (i.type || '') === 'pulang') || null;
+                const renderRow = (q, rowLabel, color, idx) => {
+                    if (!q) return '';
+                    const open = !!q.is_open;
+                    return `
+            <div style="display:flex;align-items:center;justify-content:space-between;
+                        padding:10px 12px;border-radius:8px;margin-bottom:8px;
+                        background:${open ? '#f0fdf4' : '#f9fafb'};
+                        border:1.5px solid ${open ? '#86efac' : '#e5e7eb'};">
+                <div style="flex:1;min-width:0;">
+                    <div style="font-weight:700;font-size:13px;color:${color};">${rowLabel}</div>
+                    <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">
+                        ${open
+                            ? `🟢 Dibuka: ${fmtTs(q.opened_at)}`
+                            : `🔴 Ditutup${q.closed_at ? ': ' + fmtTs(q.closed_at) : ' (belum pernah dibuka)'}`}
+                    </div>
+                </div>
+                <button class="btn btn-sm ${open ? 'btn-red' : 'btn-green'}" style="margin-left:10px;white-space:nowrap;"
+                        onclick="toggleQRStatus('${q.id}',${open},'${q.type}',${idx})">
+                    ${open ? '🔒 Tutup' : '🔓 Buka'}
+                </button>
+            </div>`;
+                };
+
+                wrap.innerHTML = groupArr.map((g, idx) => {
+                    const masuk = g.items.find(i => i.type === 'masuk') || g.items[0];
+                    const pulang = g.items.find(i => i.type === 'pulang') || null;
+                    const anyOpen = g.items.some(i => i.is_open);
 
                     return `
-                    <div style="border:2px solid ${expired ? '#fecaca' : '#d1fae5'};border-radius:12px;
-                                padding:16px;margin-bottom:14px;background:${expired ? '#fff7f7' : '#f9fffe'};">
-
-                        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
-                            <div>
-                                <div style="font-weight:800;font-size:16px;">${escHtml(g.baseLabel)}</div>
-                                <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">
-                                    Dibuat: ${g.valid_date} &nbsp;·&nbsp; ${durLabel}
-                                </div>
-                                <div style="font-size:12px;color:${expired ? 'var(--danger)' : 'var(--success)'};
-                                            margin-top:2px;font-weight:700;">
-                                    ${expired ? '⛔ Kadaluarsa' : '✅ Aktif'}
-                                </div>
-                            </div>
-                            <span class="badge ${expired ? 'b-red' : 'b-green'}">${expired ? 'Expired' : 'Aktif'}</span>
+            <div style="border:2px solid ${anyOpen ? '#86efac' : '#e5e7eb'};border-radius:12px;
+                        padding:16px;margin-bottom:14px;background:white;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                    <div>
+                        <div style="font-weight:800;font-size:16px;">${escHtml(g.baseLabel)}</div>
+                        <div style="font-size:11.5px;color:var(--text-muted);margin-top:2px;">
+                            Dibuat: ${g.valid_date}
                         </div>
+                    </div>
+                    <span class="badge ${anyOpen ? 'b-green' : 'b-red'}" style="white-space:nowrap;">
+                        ${anyOpen ? '🟢 Ada yg Buka' : '🔴 Semua Tutup'}
+                    </span>
+                </div>
 
-                        <div style="display:flex;gap:8px;margin-bottom:12px;">
-                            <span class="badge b-green" style="font-size:12px;">🟢 QR Masuk</span>
-                            ${pulang ? '<span class="badge b-blue" style="font-size:12px;">🔵 QR Pulang</span>' : ''}
-                        </div>
+                ${renderRow(masuk, '🟢 QR Masuk', '#16a34a', idx)}
+                ${renderRow(pulang, '🔵 QR Pulang', '#2563eb', idx)}
 
-                        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                            <button class="btn btn-sm" style="background:#e0f2fe;color:#0369a1;"
-                                onclick="toggleQRPreview(${idx})">
-                                👁️ Lihat QR
-                            </button>
-                            <button class="btn btn-sm btn-gold"
-                                onclick="printQRPair(${idx})">
-                                🖨️ Cetak 2 QR
-                            </button>
-                            <button class="btn btn-sm btn-red"
-                                onclick="deleteQRGroup(${idx})">
-                                🗑️ Hapus
-                            </button>
-                        </div>
-
-                        <div id="qr-prev-${idx}" style="display:none;margin-top:14px;"></div>
-                    </div>`;
+                <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+                    <button class="btn btn-sm" style="background:#e0f2fe;color:#0369a1;"
+                        onclick="toggleQRPreview(${idx})">👁️ Lihat QR</button>
+                    <button class="btn btn-sm btn-gold"
+                        onclick="printQRPair(${idx})">🖨️ Cetak 2 QR</button>
+                    <button class="btn btn-sm btn-red"
+                        onclick="deleteQRGroup(${idx})">🗑️ Hapus</button>
+                </div>
+                <div id="qr-prev-${idx}" style="display:none;margin-top:14px;"></div>
+            </div>`;
                 }).join('');
 
             } catch (e) {
-                wrap.innerHTML = '<div style="color:red;padding:12px;">Error: ' + e.message + '</div>';
+                wrap.innerHTML = `<div style="color:red;padding:12px;">Error: ${e.message}</div>`;
             }
+        }
+        async function toggleQRStatus(qrId, isCurrentlyOpen, qrType, idx) {
+            const g = qrGroupData[idx];
+            if (!g) return;
+            const nowIso = new Date().toISOString();
+
+            try {
+                if (!isCurrentlyOpen) {
+                    // ── BUKA ──
+                    await sb.from('qr_tokens')
+                        .update({ is_open: true, opened_at: nowIso, closed_at: null })
+                        .eq('id', qrId);
+
+                    // Jika QR Pulang dibuka → auto-tutup QR Masuk pasangannya
+                    if (qrType === 'pulang') {
+                        const masuk = g.items.find(i => i.type === 'masuk');
+                        if (masuk && masuk.is_open) {
+                            await sb.from('qr_tokens')
+                                .update({ is_open: false, closed_at: nowIso })
+                                .eq('id', masuk.id);
+                            toast('✅ QR Pulang dibuka · QR Masuk otomatis ditutup', 'ok');
+                        } else {
+                            toast('✅ QR Pulang berhasil dibuka', 'ok');
+                        }
+                    } else {
+                        toast('✅ QR Masuk berhasil dibuka', 'ok');
+                    }
+                } else {
+                    // ── TUTUP ──
+                    await sb.from('qr_tokens')
+                        .update({ is_open: false, closed_at: nowIso })
+                        .eq('id', qrId);
+                    toast('🔒 QR berhasil ditutup', 'ok');
+                }
+
+                await loadQR();
+            } catch (e) { toast('Gagal: ' + e.message, 'err'); }
         }
 
         // Escape HTML untuk keamanan
@@ -2483,10 +2505,8 @@ ${a.status === 'terlambat'
                 const { data: qr, error: qErr } = await sb.from('qr_tokens').select('*')
                     .eq('token', parsed.token).eq('is_active', true).single();
                 if (qErr || !qr) throw new Error('Token QR tidak valid');
-                if (qr.valid_until && qr.valid_until < today())
-                    throw new Error('QR Code sudah kadaluarsa');
-                if (qr.valid_date > today())
-                    throw new Error('QR Code belum berlaku');
+if (!qr.is_open)
+    throw new Error('QR Code belum dibuka atau sudah ditutup oleh Manajemen');
 
                 // Ambil type dari QR (masuk / pulang)
                 // SESUDAH: baca dari payload QR dulu, kalau kosong ambil dari database
