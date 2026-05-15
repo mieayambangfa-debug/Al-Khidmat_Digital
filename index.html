@@ -2288,8 +2288,7 @@ ${a.status === 'terlambat'
             try {
                 const [{ data: teachers, error: tErr }, { data: att, error: aErr }] = await Promise.all([
                     sb.from('teachers').select('teacher_id,name,subject').eq('is_active', true).order('name'),
-                    sb.from('attendance').select('*').eq('date', d)
-                ]);
+                    sb.from('attendance').select('id,teacher_id,date,check_in,check_out,status,photo_url,photo_url_pulang,gps_lat,gps_lng').eq('date', d)]);
                 if (tErr) throw tErr;
                 if (aErr) throw aErr;
 
