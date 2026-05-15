@@ -2256,6 +2256,25 @@ ${a.status === 'terlambat'
 
         // — Report (ANIMATED) —
         // ══ LAPORAN (versi baru: semua guru + alpha detection) ══
+        function renderPhotoCell(r) {
+            const imgStyle = 'width:38px;height:38px;object-fit:cover;border-radius:6px;cursor:pointer;';
+            const masuk = r.photo_url
+                ? `<a href="${r.photo_url}" target="_blank" title="📷 Foto Masuk – klik untuk buka / klik kanan unduh">
+             <img src="${r.photo_url}" style="${imgStyle}border:2px solid #86efac;"></a>`
+                : '';
+            const pulang = r.photo_url_pulang
+                ? `<a href="${r.photo_url_pulang}" target="_blank" title="📷 Foto Pulang – klik untuk buka / klik kanan unduh">
+             <img src="${r.photo_url_pulang}" style="${imgStyle}border:2px solid #93c5fd;margin-left:4px;"></a>`
+                : '';
+            const gps = (r.gps_lat && r.gps_lng)
+                ? `<a href="https://maps.google.com/?q=${r.gps_lat},${r.gps_lng}" target="_blank"
+              title="📍 Lihat lokasi GPS di Google Maps"
+              style="font-size:18px;text-decoration:none;margin-left:4px;line-height:1;">📍</a>`
+                : '';
+            if (!masuk && !pulang && !gps)
+                return '<span style="color:#d1d5db;font-size:12px;">–</span>';
+            return `<div style="display:flex;align-items:center;gap:2px;">${masuk}${pulang}${gps}</div>`;
+        }
 
         async function loadReport() {
             const d = document.getElementById('filter-tgl').value;
@@ -2290,7 +2309,11 @@ ${a.status === 'terlambat'
                         subject: t.subject,
                         status: a ? (a.status || 'hadir') : 'alpha',
                         check_in: a ? a.check_in : null,
-                        check_out: a ? a.check_out : null   // ← TAMBAHAN
+                        check_out: a ? a.check_out : null,
+                        photo_url: a ? a.photo_url : null,
+                        photo_url_pulang: a ? a.photo_url_pulang : null,
+                        gps_lat: a ? a.gps_lat : null,
+                        gps_lng: a ? a.gps_lng : null
                     };
                 });
 
@@ -2326,8 +2349,7 @@ ${a.status === 'terlambat'
                 <thead>
                     <tr>
                         <th>ID</th><th>Nama Guru</th><th>Bidang</th>
-                        <th>Jam Masuk</th><th>Jam Pulang</th><th>Status</th><th>Aksi</th>
-                    </tr>
+<th>Jam Masuk</th><th>Jam Pulang</th><th>Foto & GPS</th><th>Status</th><th>Aksi</th>                    </tr>
                 </thead>
                 <tbody>
                     ${rows.map(r => `
@@ -2337,8 +2359,9 @@ ${a.status === 'terlambat'
                         <td><strong>${r.name}</strong></td>
                         <td>${r.subject || '–'}</td>
                         <td>${r.check_in ? fmtTime(r.check_in) : '<span style="color:#9ca3af;">–</span>'}</td>
-                        <td>${r.check_out ? fmtTime(r.check_out) : '<span style="color:#9ca3af;">–</span>'}</td>
-                        <td>${badgeMap[r.status] || badgeMap.hadir}</td>
+<td>${r.check_out ? fmtTime(r.check_out) : '<span style="color:#9ca3af;">–</span>'}</td>
+<td>${renderPhotoCell(r)}</td>
+<td>${badgeMap[r.status] || badgeMap.hadir}</td>
                         <td>
                             ${r.status !== 'hadir' && r.status !== 'terlambat'
                         ? `<button class="btn btn-sm btn-gold"
@@ -2510,7 +2533,98 @@ ${a.status === 'terlambat'
             const sm = document.getElementById('scan-msg');
             if (sm) sm.textContent = 'Mendeteksi QR Code…';
         }
+        // ── GPS ──
+        function getGPS() {
+            return new Promise(resolve => {
+                if (!navigator.geolocation) return resolve(null);
+                navigator.geolocation.getCurrentPosition(
+                    p => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
+                    () => resolve(null),
+                    { timeout: 5000, enableHighAccuracy: true }
+                );
+            });
+        }
 
+        // ── Jepret satu frame dari video aktif ──
+        function captureFrame() {
+            const vid = document.getElementById('camera-view');
+            if (!vid || !camStream || !vid.videoWidth) return null;
+            const c = document.createElement('canvas');
+            c.width = vid.videoWidth;
+            c.height = vid.videoHeight;
+            c.getContext('2d').drawImage(vid, 0, 0);
+            return c.toDataURL('image/jpeg', 0.75);
+        }
+
+        // ── base64 → Blob ──
+        function b64toBlob(b64) {
+            const bin = atob(b64.split(',')[1]);
+            const arr = new Uint8Array(bin.length);
+            for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+            return new Blob([arr], { type: 'image/jpeg' });
+        }
+
+        // ── Jepret + upload foto + ambil GPS (diam-diam) ──
+        async function captureAndUpload(teacherId, absenType) {
+            // Pastikan video masih aktif dan ada frame
+            const vid = document.getElementById('camera-view');
+            if (!vid || !camStream || !vid.videoWidth) {
+                console.warn('[Foto] Video tidak aktif, foto dilewati');
+                return { url: null, lat: null, lng: null };
+            }
+
+            // Jepret frame dari video
+            const c = document.createElement('canvas');
+            c.width = vid.videoWidth;
+            c.height = vid.videoHeight;
+            c.getContext('2d').drawImage(vid, 0, 0);
+            const b64 = c.toDataURL('image/jpeg', 0.75);
+            if (!b64 || b64 === 'data:,') {
+                console.warn('[Foto] Canvas kosong, foto dilewati');
+                return { url: null, lat: null, lng: null };
+            }
+
+            // Ambil GPS (boleh gagal)
+            let gps = null;
+            try {
+                gps = await new Promise(resolve => {
+                    if (!navigator.geolocation) return resolve(null);
+                    navigator.geolocation.getCurrentPosition(
+                        p => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
+                        () => resolve(null),
+                        { timeout: 4000, enableHighAccuracy: true }
+                    );
+                });
+            } catch (_) { }
+
+            // Konversi base64 → Blob
+            const bin = atob(b64.split(',')[1]);
+            const arr = new Uint8Array(bin.length);
+            for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+            const blob = new Blob([arr], { type: 'image/jpeg' });
+
+            // Upload ke Supabase Storage
+            const rand = Math.random().toString(36).substr(2, 8).toUpperCase();
+            const filename = `${teacherId}_${today()}_${absenType}_${rand}.jpg`;
+
+            const { data: upData, error: upErr } = await sb.storage
+                .from('attendance-photos')
+                .upload(filename, blob, { contentType: 'image/jpeg', upsert: false });
+
+            if (upErr) {
+                // Tampilkan error nyata ke konsol DAN toast singkat
+                console.error('[Foto] Upload gagal:', upErr);
+                toast('⚠️ Foto gagal upload: ' + upErr.message, 'err');
+                return { url: null, lat: null, lng: null };
+            }
+
+            const { data: urlData } = sb.storage
+                .from('attendance-photos')
+                .getPublicUrl(filename);
+
+            console.log('[Foto] Upload sukses:', urlData.publicUrl);
+            return { url: urlData.publicUrl, lat: gps?.lat ?? null, lng: gps?.lng ?? null };
+        }
         async function processQR(raw) {
             try {
                 let parsed;
@@ -2544,8 +2658,12 @@ ${a.status === 'terlambat'
                         stopScan();
                         return;
                     }
+                    const photoPulang = await captureAndUpload(me.teacher_id, 'pulang');
                     const { error: outErr } = await sb.from('attendance')
-                        .update({ check_out: new Date().toISOString() })
+                        .update({
+                            check_out: new Date().toISOString(),
+                            photo_url_pulang: photoPulang.url
+                        })
                         .eq('teacher_id', me.teacher_id).eq('date', today());
                     if (outErr) throw outErr;
 
@@ -2574,12 +2692,16 @@ ${a.status === 'terlambat'
                 const deadlineMins = dh * 60 + dm;
                 const absStatus = nowMins > deadlineMins ? 'terlambat' : 'hadir';
 
-                // Insert attendance
+                // Diam-diam jepret foto + GPS, lalu insert
+                const photoMasuk = await captureAndUpload(me.teacher_id, 'masuk');
                 const { error: insErr } = await sb.from('attendance').insert([{
                     teacher_id: me.teacher_id,
                     date: today(),
                     check_in: new Date().toISOString(),
-                    status: absStatus
+                    status: absStatus,
+                    photo_url: photoMasuk.url,
+                    gps_lat: photoMasuk.lat,
+                    gps_lng: photoMasuk.lng
                 }]);
                 if (insErr) throw insErr;
 
