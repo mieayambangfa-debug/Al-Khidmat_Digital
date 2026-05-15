@@ -1133,6 +1133,15 @@
                     </div>
                 </div>
 
+                <div class="form-group" style="margin-top:4px;">
+                    <label class="form-label">🔑 Password Manajemen</label>
+                    <input type="password" id="set-m-pass" class="form-input" placeholder="••••••••"
+                        autocomplete="new-password">
+                    <div style="font-size:11.5px;color:var(--text-muted);margin-top:4px;">
+                        Kosongkan jika tidak ingin mengubah password saat ini.
+                    </div>
+                </div>
+
                 <button class="btn btn-green" style="width:100%;padding:12px;margin-top:8px;"
                     onclick="saveSettings()">💾 Simpan Pengaturan</button>
 
@@ -1281,7 +1290,7 @@
                     <label class="form-label">Ubah Password</label>
                     <input type="text" id="prof-g-pass" class="form-input" placeholder="Masukkan password baru">
                     <div style="font-size:11.5px; color:var(--text-muted); margin-top:6px;">
-                        * Password bawaan adalah <b>alhamdulilah</b>. Silakan ubah demi keamanan akun Anda.
+                        * Password bawaan adalah <b>1</b>. Silakan ubah demi keamanan akun Anda.
                     </div>
                 </div>
 
@@ -1597,11 +1606,10 @@
         const SB_URL = 'https://zfhzddyoevblhvnjfiru.supabase.co';
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpmaHpkZHlvZXZibGh2bmpmaXJ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MjQwMTQsImV4cCI6MjA5NDEwMDAxNH0.BlydRfkkMRuO8L9pGQxFgkJHpvJO8ttgCqDXInkrnvY';
         const M_PASS = 'bismillah';
-        const G_PASS = 'alhamdulilah';
+        const G_PASS = '1';
 
         let sb, me = null, scanTimer = null, camStream = null, editId = null;
-        let appSettings = { school_name: 'Rumah Qur\'an Al-Khidmat', checkin_deadline: '07:30' };
-        // ── VARIABLE LOADING ISLAMI ──
+        let appSettings = { school_name: 'Rumah Qur\'an Al-Khidmat', checkin_deadline: '07:30', mgmt_password: 'bismillah' };        // ── VARIABLE LOADING ISLAMI ──
         const loaderHTML = `
             <div class="islamic-loader">
                 <div class="loader-ikon">🕌</div>
@@ -1638,18 +1646,25 @@
                 const elDeadline = document.getElementById('set-deadline');
                 if (elSchool) elSchool.value = appSettings.school_name || '';
                 if (elDeadline) elDeadline.value = appSettings.checkin_deadline || '07:30';
+                const elMPass = document.getElementById('set-m-pass');
+                if (elMPass) elMPass.value = ''; // Selalu kosong saat load, isi manual jika mau ubah
             } catch (e) { console.error('loadSettings:', e); }
         }
 
         async function saveSettings() {
             const deadline = document.getElementById('set-deadline').value;
+            const newMPass = document.getElementById('set-m-pass')?.value.trim();
             const msg = document.getElementById('settings-saved-msg');
 
             if (!deadline) { toast('Isi batas jam masuk', 'err'); return; }
 
             try {
-                await sb.from('settings').upsert({ key: 'checkin_deadline', value: deadline });
+                const upsertData = [{ key: 'checkin_deadline', value: deadline }];
+                if (newMPass) upsertData.push({ key: 'mgmt_password', value: newMPass });
+
+                await sb.from('settings').upsert(upsertData);
                 appSettings.checkin_deadline = deadline;
+                if (newMPass) appSettings.mgmt_password = newMPass;
 
                 msg.style.display = 'block';
                 setTimeout(() => { msg.style.display = 'none'; }, 3000);
@@ -1700,7 +1715,9 @@
 
             try {
                 if (role === 'manajemen') {
-                    if (document.getElementById('inp-m-pass').value !== M_PASS)
+                    // Ambil password terbaru dari settings (sudah di-load saat init, atau fallback ke M_PASS)
+                    const currentMPass = appSettings.mgmt_password || M_PASS;
+                    if (document.getElementById('inp-m-pass').value !== currentMPass)
                         throw new Error('Password salah');
                     me = { role: 'manajemen', name: 'Administrator' };
                     showPage('manajemen');
@@ -1801,7 +1818,7 @@
                     sb.from('teachers').select('id', { count: 'exact', head: true }).eq('is_active', true),
                     sb.from('attendance').select('id', { count: 'exact', head: true }).eq('date', d),
                     sb.from('attendance').select('id', { count: 'exact', head: true }).gte('date', d.slice(0, 7) + '-01'),
-sb.from('qr_tokens').select('id').eq('is_open', true).eq('is_active', true).limit(1)                ]);
+                    sb.from('qr_tokens').select('id').eq('is_open', true).eq('is_active', true).limit(1)]);
                 document.getElementById('s-guru').textContent = tR.count ?? '–';
                 document.getElementById('s-hadir').textContent = hR.count ?? '–';
                 document.getElementById('s-bulan').textContent = bR.count ?? '–';
@@ -2505,8 +2522,8 @@ ${a.status === 'terlambat'
                 const { data: qr, error: qErr } = await sb.from('qr_tokens').select('*')
                     .eq('token', parsed.token).eq('is_active', true).single();
                 if (qErr || !qr) throw new Error('Token QR tidak valid');
-if (!qr.is_open)
-    throw new Error('QR Code belum dibuka atau sudah ditutup oleh Manajemen');
+                if (!qr.is_open)
+                    throw new Error('QR Code belum dibuka atau sudah ditutup oleh Manajemen');
 
                 // Ambil type dari QR (masuk / pulang)
                 // SESUDAH: baca dari payload QR dulu, kalau kosong ambil dari database
